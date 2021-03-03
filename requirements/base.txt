@@ -1,0 +1,8 @@
+Jinja2==2.11.2
+appdirs==1.4.4
+fdb==2.0.1
+firebirdsql==1.1.4
+pyodbc==4.0.30
+requests[socks]
+wxPython==4.1.0
+-r docs.txt
