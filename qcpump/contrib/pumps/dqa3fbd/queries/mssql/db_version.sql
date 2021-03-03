@@ -1,0 +1,1 @@
+SELECT DatabaseVersion FROM AtlasMaster ORDER BY MODIFIED DESC;

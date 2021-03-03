@@ -1,0 +1,5 @@
+{
+    "DEBUG": true,
+    "LOG_LEVEL": "DEBUG",
+    "LOG_TO_CONSOLE": true
+}
