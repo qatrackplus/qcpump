@@ -182,6 +182,7 @@ class FileMover(BasePump):
     def get_paths(self, mover):
         """Get a listing of all files in our source directory and filter them based on our config options"""
         globber = self.construct_globber(mover['pattern'], mover['recursive'])
+        self.log_debug(f"Getting paths with globber: '{globber}' and mover: {mover}")
         all_paths = Path(mover['source']).glob(globber)
         return self.filter_paths(all_paths, mover['ignore pattern'])
 
@@ -191,6 +192,6 @@ class FileMover(BasePump):
 
     def filter_paths(self, paths, ignore_pattern):
         """Filter out any paths that match our ignore pattern"""
-        if ignore_pattern is None:
-            return paths
+        if ignore_pattern in ["", None]:
+            return list(paths)
         return [p for p in paths if not p.match(f"*/{ignore_pattern}")]
