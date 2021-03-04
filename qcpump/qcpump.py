@@ -123,6 +123,8 @@ class QCPumpUI(ui.VQCPumpUI):
 
         # I don't know why but you need a size event and to reset the focus
         # order to get the property controls to respond
+        p.Fit()
+        p.Layout()
         p.SendSizeEvent()
         self.SetFocus()
 
