@@ -54,7 +54,7 @@ class Settings:
 
     PUMP_DIRECTORIES = None  # set to list of other directories to include user defined pump types from
 
-    DB_CONNECT_TIMEOUT = 3
+    DB_CONNECT_TIMEOUT = 3  # timeout for database connections where available
 
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
@@ -71,6 +71,8 @@ class Settings:
                     f.write(json.dumps({
                         "LOG_LEVEL": "info",
                         "DEBUG": False,
+                        "PUMP_DIRECTORIES": [],
+                        "DB_CONNECT_TIMEOUT": 3,
                     }, indent=2))
             except Exception as e:
                 raise Exception("Unable to create settings file %s. Error was %s" % (self.fname, str(e)))
