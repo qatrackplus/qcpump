@@ -214,11 +214,11 @@ class BasePump(wx.Panel):
                     'readonly': True,
                 },
                 {
-                    'name': 'interval',
+                    'name': 'interval (s)',
                     'type': INT,
                     'required': True,
                     'help': "Enter how often this Pump should run in seconds.",
-                    'default': 60,
+                    'default': 300,
                     'validation': {
                         'max': 24 * 60 * 60,
                         'min': 1,
