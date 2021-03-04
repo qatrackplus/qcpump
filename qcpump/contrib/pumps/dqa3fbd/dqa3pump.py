@@ -5,9 +5,9 @@ import time
 import jinja2
 import requests
 
-from qcpump.core.db import firebirdsql_query, fdb_query, mssql_query
-from qcpump.core.json import QCPumpJSONEncoder
-from qcpump.pumps.base import BOOLEAN, INT, MULTCHOICE, STRING, BasePump, FLOAT
+from qcpumpui.core.db import firebirdsql_query, fdb_query, mssql_query
+from qcpumpui.core.json import QCPumpJSONEncoder
+from qcpumpui.pumps.base import BOOLEAN, INT, MULTCHOICE, STRING, BasePump, FLOAT
 
 HTTP_CREATED = requests.codes['created']
 HTTP_OK = requests.codes['ok']
@@ -44,9 +44,12 @@ class BaseDQA3:
                 "'Daily QA3 Results: {{ energy }}{{ beam_type }}'"
             )
             return False, msg
-        data_key = values['data key test name']
-        if not data_key:
-            msg = "You must include the name of the QATrack+ test used for tracking the DQA3 data key"
+        data_key = values['data key test name'].replace(" ", "")
+        if "{{beam_type}}" not in data_key or "{{energy}}" not in data_key:
+            msg = (
+                "You must include template variables for energy & beam_type e.g. "
+                "'Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}'"
+            )
             return False, msg
         return True, "OK"
 
@@ -407,9 +410,14 @@ class BaseDQA3:
         return results['results'][0]['url']
 
     def test_list_name(self, energy, beam_type):
-
         tl_name_template = self.get_config_value("Test List", "name")
         template = jinja2.Template(tl_name_template, undefined=jinja2.StrictUndefined)
+        context = {'energy': energy, 'beam_type': beam_type}
+        return template.render(context)
+
+    def test_name(self, energy, beam_type):
+        test_name_template = self.get_config_value('Test List', 'data key test name')
+        template = jinja2.Template(test_name_template, undefined=jinja2.StrictUndefined)
         context = {'energy': energy, 'beam_type': beam_type}
         return template.render(context)
 
@@ -425,7 +433,7 @@ class BaseDQA3:
         url = self.construct_api_url("qa/testinstances")
         energy, beam_type = self.energy_and_beam_type_for_row(row)
         tl_name = self.test_list_name(energy, beam_type)
-        test_name = self.get_config_value('Test List', 'data key test name')
+        test_name = self.data_key_test_name(energy, beam_type)
         query_params = {
             'test_list_instance__test_list__name': tl_name,
             'unit_test_info__test__name': test_name,
@@ -607,8 +615,11 @@ class FirebirdDQA3(BaseDQA3, BasePump):
                     'name': 'data key test name',
                     'type': STRING,
                     'required': True,
-                    'help': "The name of the QATrack+ Test used for tracking which DQA3 Record was uploaded",
-                    'default': "DQA3 Results: Data Key",
+                    'help': (
+                        "Enter a template for the name of the QATrack+ Test used "
+                        "for tracking which DQA3 Record was uploaded"
+                    ),
+                    'default': "Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}",
                 },
             ]
         },
@@ -801,8 +812,11 @@ class AtlasDQA3(BaseDQA3, BasePump):
                     'name': 'data key test name',
                     'type': STRING,
                     'required': True,
-                    'help': "The name of the QATrack+ Test used for tracking which DQA3 Record was uploaded",
-                    'default': "DQA3 Results: Data Key",
+                    'help': (
+                        "Enter a template for the name of the QATrack+ Test used "
+                        "for tracking which DQA3 Record was uploaded"
+                    ),
+                    'default': "Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}",
                 },
             ]
         },
