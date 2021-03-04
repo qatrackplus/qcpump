@@ -60,7 +60,9 @@ DB_CONNECTION_TIMEOUT
 
 PUMP_DIRECTORIES
     A list of directories to look for :ref:`custom Pump Types
-    <pumps-developing>` you are using.
+    <pumps-developing>` you are using.  This should be an empty list
+    (`"PUMP_DIRECTORIES": []`) unless you are using custom *Pump Types* not
+    included with QCPump.
 
 
 A sample settings.json document might look like:

@@ -16,6 +16,11 @@ Welcome to QCPump's documentation!
 QC Pump Overview
 ----------------
 
+.. figure:: images/main.png
+    :alt: QCPump Interface
+
+    QCPump Interface
+
 QCPump is an extensible utility for extracting data from various sources
 (databases, filesystem etc) and moving it to other locations.  
 
