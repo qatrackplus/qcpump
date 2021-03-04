@@ -59,7 +59,7 @@ class Settings:
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
 
-        settings_dir = Path(appdirs.user_config_dir(Settings.APPNAME, Settings.VENDOR, version=Settings.VERSION))
+        settings_dir = Path(appdirs.user_config_dir(Settings.APPNAME, Settings.VENDOR))
         self.fname = settings_dir / "settings.json"
         if not self.fname.parent.exists():
             self.fname.parent.mkdir(parents=True, exist_ok=True)

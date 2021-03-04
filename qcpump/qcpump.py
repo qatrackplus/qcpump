@@ -201,7 +201,7 @@ class QCPumpUI(ui.VQCPumpUI):
     def get_pump_config_dir(self):
         """Return the user directory used for saving pump configuration data"""
         pumps_dir = os.path.join(Settings.APPNAME, "pumps")
-        return Path(appdirs.user_config_dir(pumps_dir, Settings.VENDOR, version=Settings.VERSION))
+        return Path(appdirs.user_config_dir(pumps_dir, Settings.VENDOR))
 
     def get_pump_config_path(self, name):
         """Return the path of a specific pumps config file. If the file doesn't
@@ -480,7 +480,7 @@ class PumpWindow(wx.SplitterWindow):
         """Run the pump immediately and then every interval seconds after (via OnPumpTimer)"""
         self.status_split.clear_log()
         self._run_pump()
-        interval = self.pump.get_config_value("Pump", "interval")
+        interval = self.pump.get_config_value("Pump", "interval (s)")
         self.timer.Start(interval * 1000)
 
     def _run_pump(self):
