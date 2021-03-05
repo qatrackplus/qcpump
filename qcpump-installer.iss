@@ -20,13 +20,13 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=E:\qc-pump-gui\dist\qcpump\LICENSE
+LicenseFile=dist\qcpump\LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=E:\qc-pump-gui\installer
+OutputDir=installer
 OutputBaseFilename=qcpump-setup-{#MyAppVersion}
-SetupIconFile=E:\qc-pump-gui\dist\qcpump\resources\img\qcpump.ico
+SetupIconFile=dist\qcpump\resources\img\qcpump.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -38,8 +38,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "E:\qc-pump-gui\dist\qcpump\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "E:\qc-pump-gui\dist\qcpump\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\qcpump\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\qcpump\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

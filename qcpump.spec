@@ -8,15 +8,15 @@ data_files = [
     # add icons etc
     ("LICENSE", "."),
     ("README.md", "."),
-    ("qcpumpui/resources/", "resources"),
+    ("qcpump/resources/", "resources"),
     # add pumps
-    ("qcpumpui/contrib/pumps/", "contrib/pumps"),
+    ("qcpump/contrib/pumps/", "contrib/pumps"),
 ]
 
 hidden_imports = [
     # core
-    "qcpumpui.core.db",
-    "qcpumpui.core.json",
+    "qcpump.core.db",
+    "qcpump.core.json",
 
     # third party
     "jinja2",
@@ -53,7 +53,7 @@ exe = EXE(  # noqa: F821
     strip=False,
     upx=False,
     console=False,  # don't show a console window
-    icon="qcpumpui/resources/img/qcpump.ico",
+    icon="qcpump/resources/img/qcpump.ico",
 )
 
 coll = COLLECT(  # noqa: F821
@@ -65,5 +65,5 @@ coll = COLLECT(  # noqa: F821
     upx=False,
     upx_exclude=[],
     name='qcpump',
-    icon="qcpumpui/resources/img/qcpump.ico",
+    icon="qcpump/resources/img/qcpump.ico",
 )
