@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import sys
 import threading
 
 import appdirs
@@ -123,10 +124,11 @@ class QCPumpUI(ui.VQCPumpUI):
 
         # I don't know why but you need a size event and to reset the focus
         # order to get the property controls to respond
-        p.Fit()
-        p.Layout()
-        p.SendSizeEvent()
+        if 'win' not in sys.platform:
+            p.Layout()
+            p.Fit()
         self.SetFocus()
+        p.SendSizeEvent()
 
     def save_pump(self, name, state):
         """persist pump state to disk"""
