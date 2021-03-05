@@ -1,16 +1,17 @@
-import collections
+from queue import Queue
 import copy
 import inspect
 import logging
 from pathlib import Path
 import threading
 import traceback
+from uuid import uuid4
 
-import toposort
 import wx
 import wx.lib.scrolledpanel
 import wx.propgrid as wxpg
 
+from qcpump.pumps import dependencies
 from qcpump.logs import get_log_level
 from qcpump.pumps.registry import register_pump_type
 from qcpump.settings import Settings
@@ -301,6 +302,8 @@ class BasePump(wx.Panel):
         # finally 2 threads to validate section 4 & 5.  This order is based on which
         # sections are dependent on the others
         self.validation_stack = []
+        self.validation_queue = Queue()
+        self.most_recent_validation_group = {s: None for s in self.dependencies.keys()}
 
         # the sections which currently have validation threads running (poppped off the validation_stack)
         self.sections_currently_validating = set()
@@ -473,16 +476,6 @@ class BasePump(wx.Panel):
         self.control_sizer.Add(self.validate, 0, wx.ALL, 5)
 
         self.main_sizer.Add(self.control_sizer, 0, wx.EXPAND | wx.ALL, 5)
-
-        validation_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        validation_text = wx.StaticText(self, wx.ID_ANY, "", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT)
-        validation_text.SetLabelText("Validation progress:")
-        validation_sizer.Add(validation_text, 0, wx.ALL | wx.EXPAND, 5)
-        self.validation_progress = wx.Gauge(self, wx.ID_ANY, 100, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL)
-        self.validation_progress.SetValue(0)
-        validation_sizer.Add(self.validation_progress, 1, wx.ALL | wx.EXPAND, 5)
-
-        self.main_sizer.Add(validation_sizer, 0, wx.ALL | wx.EXPAND, 5)
 
     def create_grid_panel(self):
         """Handle adding panel and grids"""
@@ -763,56 +756,77 @@ class BasePump(wx.Panel):
 
         self.state[config['name']]['subsections'][subsection_idx][field_idx]['value'] = value
 
-        self.validation_stack = self.create_validation_stack(section)
-        self.log_debug(f"new validation stack (OnGridChanged) {self.validation_stack}")
+        levels = dependencies.generate_validation_level_subset(section, self.dependencies)
+        self.add_levels_to_queue(levels)
 
-    def create_validation_stack(self, section):
-        """Set the validation stack to the input section and every validation
-        level below the current section.  Note this may include sections which
-        don't need to be re-validated since they don't actually depend on the
-        changed value"""
+    def make_validation_group_id(self):
+        """Return a unique string to identify a validation group"""
+        return str(uuid4())
 
-        found = False
-        validation_stack = [{section}]
-        for level in self.validation_levels:
-            if section in level:
-                found = True
-            elif found:
-                validation_stack.append(set(level))
+    def run_grid_validators(self, group):
+        group_id, levels = group
 
-        # reversed since we want to validate dependents after dependencies are validated
-        return list(reversed(validation_stack))
+        # first display in UI that we are going to validate some grids
+        for level in levels:
+            for section in level:
+                grid = self.grids[section]
+                grid_id = grid.GetId()
+                self.grid_validation_state[grid_id] = None, "Currently validating..."
+                self.update_grid_validation_message(grid_id, None, "Currently validating...")
 
-    def run_grid_validation(self, section):
-        """Run the validation thread for input section"""
-
-        grid = self.grids[section]
-        grid_id = grid.GetId()
-        validation_data = self.get_validation_data_for_grid(grid)
-        validator = self.grid_validators[grid_id]
-        self.grid_validation_state[grid_id] = None, "Currently validating..."
-        self.update_grid_validation_message(grid_id, None, "Currently validating...")
-
-        self.log_debug(f"Starting validation for {section}")
-
-        # if this section has dependencies and they are all valid then
-        # we need to update available choices before validating
-        has_dependencies = len(self.dependencies[section]) > 0
-        if has_dependencies and not self.incomplete_dependencies_of_section(section):
-            self.update_grid_section_choices(self.grids[section], section)
-
+        # Run all the validator threads in this parent thread so we can ignore
+        # the results from validators which were started before the most recent
+        # user input
         validation_thread = threading.Thread(
-            target=self._run_validator,
-            args=(section, grid_id, validator, validation_data),
+            target=self._run_grid_validators,
+            args=(group,),
             daemon=True,
         )
         validation_thread.start()
 
-    def _run_validator(self, section, grid_id, validator, validation_data):
-        """Thread target function for validating a given section/grid.  Make
-        sure you don't update the UI in this function since it runs in a
-        separate thread and will crash if you try to update something in the
-        main thread"""
+    def _run_grid_validators(self, group):
+
+        group_id, levels = group
+
+        result_set = {
+            'group_id': group_id,
+            'results': []
+        }
+        for level in levels:
+
+            threads = []
+
+            # container to hold results from validation threads
+            thread_results = {}
+
+            for section in level:
+
+                self.log_debug(f"Starting validation for section {section} {group_id}")
+
+                grid = self.grids[section]
+                grid_id = grid.GetId()
+                validation_data = self.get_validation_data_for_grid(grid)
+                validator = self.grid_validators[grid_id]
+
+                t = threading.Thread(
+                    target=self._run_validatino_thread,
+                    args=(grid_id, section, validator, validation_data, thread_results),
+                    daemon=True,
+                )
+                t.start()
+                threads.append((section, t))
+
+            # wait for all threads to finish and set the results
+            for section, t in threads:
+                t.join()
+                result_set['results'].append(thread_results[section])
+
+        # tell main thread validation is finished
+        evt = PumpEvent(_EVT_VALIDATION_COMPLETE, wx.ID_ANY, result_set)
+        wx.PostEvent(self, evt)
+
+    def _run_validation_thread(self, grid_id, section, validator, validation_data, thread_results):
+        """Wrapper around the pumps validator to set results required for updating UI later"""
 
         try:
             valid, msg = validator(validation_data)
@@ -828,31 +842,53 @@ class BasePump(wx.Panel):
             "section": section,
             'grid_id': grid_id,
         }
-        evt = PumpEvent(_EVT_VALIDATION_COMPLETE, wx.ID_ANY, data)
-        wx.PostEvent(self, evt)
+        thread_results[section] = data
+
+    def _grid_validator(self, section, grid_id, validator, validation_data):
+
+        try:
+            valid, msg = validator(validation_data)
+            exception = None
+        except Exception:
+            valid, msg = False, "Invalid Validator Implementation"
+            exception = traceback.format_exc()
+
+        data = {
+            'valid': valid,
+            'message': msg,
+            "exception": exception,
+            "section": section,
+            'grid_id': grid_id,
+        }
+        return data
 
     def OnValidationComplete(self, evt):
         """After any validator thread finishes, set the grid validation state,
         and updated any dynamic choices which were dependent on this
         validator"""
 
-        result = evt.GetValue()
-        self.log_debug(f"Finished validation for {result['section']}")
-        if result['exception']:
-            self.logger.critical(result['exception'])
+        result_set = evt.GetValue()
+        group_id = result_set['group_id']
+        for result in result_set['results']:
+            if result['exception']:
+                self.logger.critical(result['exception'])
 
-        self.grid_validation_state[result['grid_id']] = result['valid'], result['message']
+            if self.most_recent_validation_group[result['section']] != group_id:
+                self.log_debug(
+                    f"Ignoring results from group {group_id} for "
+                    "section {result['section']} because they are not the latest"
+                )
+                continue
 
-        self.update_grid_validation_message(result['grid_id'], result['valid'], result['message'])
-        self.update_grid_status(result['section'])
-        self.sections_currently_validating.remove(result['section'])
-        self.set_validation_progress()
+            self.log_debug(
+                f"Using results from group {group_id} for "
+                "section {result['section']} because they are the most recent"
+            )
 
-    def set_validation_progress(self):
-        ngrids = len(self.grids)
-        nleft = sum(len(level) for level in self.validation_stack)
-        progress = int(100*(1 - nleft / ngrids))
-        self.validation_progress.SetValue(progress)
+            self.grid_validation_state[result['grid_id']] = result['valid'], result['message']
+
+            self.update_grid_validation_message(result['grid_id'], result['valid'], result['message'])
+            self.update_grid_status(result['section'])
 
     def resize_grids(self):
         """Set the grid sizes so that no scrollbars are required"""
@@ -951,17 +987,20 @@ class BasePump(wx.Panel):
 
     def set_dependencies(self):
         self.dependencies = {s: set(f['dependencies']) for s, f in self.configd.items()}
-        self.validation_levels = list(toposort.toposort(self.dependencies))
-        self.dependents = collections.defaultdict(list)
-        for section, dependencies in self.dependencies.items():
-            for dep in dependencies:
-                self.dependents[dep].append(section)
+        self.validation_levels = dependencies.generate_validation_levels(self.dependencies)
 
     def validate_all(self):
         """Validate all grids/sections"""
 
-        self.validation_stack = list(reversed([list(level) for level in self.validation_levels]))
-        self.log_debug(f"new validation stack (validate_all) {self.validation_stack}")
+        levels = copy.deepcopy(self.validation_levels)
+        self.add_levels_to_queue(levels)
+
+    def add_levels_to_queue(self, levels):
+        print("Adding levels to queue", levels)
+        group_id = self.make_validation_group_id()
+        for level in levels:
+            self.most_recent_validation_group.update({section: group_id for section in level})
+        self.validation_queue.put((group_id, levels))
 
     def get_validation_data_for_grid(self, grid):
         """Return a dict of form {field_name: value} for all properties from a grid"""
@@ -1172,20 +1211,10 @@ class BasePump(wx.Panel):
 
     def OnIdle(self, evt):
         """Check if there's any validation to do"""
-
-        no_validation_currently_occuring = len(self.sections_currently_validating) == 0
-        validation_waiting = len(self.validation_stack) > 0
-        if no_validation_currently_occuring and validation_waiting:
-            self.set_validation_progress()
-            self.sections_currently_validating = self.validation_stack.pop()
-            self.log_debug(f"Adding {self.sections_currently_validating} to threads")
-            for section in self.sections_currently_validating:
-                self.run_grid_validation(section)
-
-        if not self.Enabled and not self.validation_stack:
-            self.Enable(True)
-        elif self.validation_stack and self.Enabled:
-            self.Enable(False)
+        validation_waiting = self.validation_queue.qsize() > 0
+        if validation_waiting:
+            validation_group = self.validation_queue.get()
+            self.run_grid_validators(validation_group)
 
     def pump(self):
         raise NotImplementedError("You must implement this in all subclasses")

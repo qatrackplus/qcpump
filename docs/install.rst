@@ -50,6 +50,8 @@ then create a new venv to install the QCPump requirements:
 
     # activate venv on *nix
     source env/bin/activate
+    # replace 18.04 with your Ubuntu version 
+    pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-18.04 wxPython
     pip install -r requirements/base.txt
 
 

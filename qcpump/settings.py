@@ -54,7 +54,7 @@ class Settings:
 
     PUMP_DIRECTORIES = None  # set to list of other directories to include user defined pump types from
 
-    DB_CONNECT_TIMEOUT = 3  # timeout for database connections where available
+    DB_CONNECT_TIMEOUT = 30  # timeout for database connections where available
 
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""

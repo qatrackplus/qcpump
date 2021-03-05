@@ -3,6 +3,10 @@ appdirs==1.4.4
 fdb==2.0.1
 firebirdsql==1.1.4
 pyodbc==4.0.30
+pytest==6.2.2
+pytest-coverage==0.0
+pytest-sugar==0.9.4
 requests[socks]
-wxPython==4.1.0
+toposort==1.6
+wxPython==4.1.1
 -r docs.txt
