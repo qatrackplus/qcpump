@@ -5,9 +5,9 @@ import time
 import jinja2
 import requests
 
-from qcpumpui.core.db import firebirdsql_query, fdb_query, mssql_query
-from qcpumpui.core.json import QCPumpJSONEncoder
-from qcpumpui.pumps.base import BOOLEAN, INT, MULTCHOICE, STRING, BasePump, FLOAT
+from qcpump.core.db import firebirdsql_query, fdb_query, mssql_query
+from qcpump.core.json import QCPumpJSONEncoder
+from qcpump.pumps.base import BOOLEAN, INT, MULTCHOICE, STRING, BasePump, FLOAT
 
 HTTP_CREATED = requests.codes['created']
 HTTP_OK = requests.codes['ok']
@@ -415,7 +415,7 @@ class BaseDQA3:
         context = {'energy': energy, 'beam_type': beam_type}
         return template.render(context)
 
-    def test_name(self, energy, beam_type):
+    def data_key_test_name(self, energy, beam_type):
         test_name_template = self.get_config_value('Test List', 'data key test name')
         template = jinja2.Template(test_name_template, undefined=jinja2.StrictUndefined)
         context = {'energy': energy, 'beam_type': beam_type}
