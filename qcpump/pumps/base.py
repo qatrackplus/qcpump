@@ -809,7 +809,7 @@ class BasePump(wx.Panel):
                 validator = self.grid_validators[grid_id]
 
                 t = threading.Thread(
-                    target=self._run_validatino_thread,
+                    target=self._run_validation_thread,
                     args=(grid_id, section, validator, validation_data, thread_results),
                     daemon=True,
                 )
