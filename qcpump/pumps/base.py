@@ -996,7 +996,6 @@ class BasePump(wx.Panel):
         self.add_levels_to_queue(levels)
 
     def add_levels_to_queue(self, levels):
-        print("Adding levels to queue", levels)
         group_id = self.make_validation_group_id()
         for level in levels:
             self.most_recent_validation_group.update({section: group_id for section in level})
