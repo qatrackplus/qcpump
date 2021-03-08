@@ -22,8 +22,9 @@ DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=dist\qcpump\LICENSE
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
-;PrivilegesRequired=lowest
+PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
+UsePreviousPrivileges=no
 OutputDir=installer
 OutputBaseFilename=qcpump-setup-{#MyAppVersion}
 SetupIconFile=dist\qcpump\resources\img\qcpump.ico
