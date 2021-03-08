@@ -27,7 +27,7 @@ hidden_imports = [
 ]
 
 a = Analysis(  # noqa: F821
-    ['qcpump.py'],
+    ['launch_qcpump.py'],
     pathex=['.'],
     binaries=[],
     datas=data_files,
