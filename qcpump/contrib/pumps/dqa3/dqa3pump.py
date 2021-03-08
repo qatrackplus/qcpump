@@ -824,7 +824,7 @@ class AtlasDQA3(BaseDQA3, BasePump):
                         "Enter a template for the name of the QATrack+ Test used "
                         "for tracking which DQA3 Record was uploaded"
                     ),
-                    'default': "Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}",
+                    'default': "Daily QA3 Results: {{ energy }}{{ beam_type }}: Data Key",
                 },
             ]
         },
