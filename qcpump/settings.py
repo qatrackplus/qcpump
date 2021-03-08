@@ -56,6 +56,11 @@ class Settings:
 
     DB_CONNECT_TIMEOUT = 30  # timeout for database connections where available
 
+    BROWSER_USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
+    )
+
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
 

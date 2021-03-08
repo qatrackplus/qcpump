@@ -8,6 +8,7 @@ import requests
 from qcpump.core.db import firebirdsql_query, fdb_query, mssql_query
 from qcpump.core.json import QCPumpJSONEncoder
 from qcpump.pumps.base import BOOLEAN, INT, MULTCHOICE, STRING, BasePump, FLOAT
+from qcpump.settings import Settings
 
 HTTP_CREATED = requests.codes['created']
 HTTP_OK = requests.codes['ok']
@@ -19,6 +20,8 @@ db_queriers = {
     'firebirdsql': firebirdsql_query,
     'mssql': mssql_query,
 }
+
+settings = Settings()
 
 
 class BaseDQA3:
@@ -140,6 +143,8 @@ class BaseDQA3:
         verify_ssl = values['verify ssl']
 
         headers = {'Authorization': f"Token {token}"}
+        if settings.BROWSER_USER_AGENT:
+            headers['User-Agent'] = settings.BROWSER_USER_AGENT
         try:
             resp = requests.get(url, headers=headers, verify=verify_ssl, allow_redirects=False)
             if resp.status_code == 200:
@@ -164,7 +169,10 @@ class BaseDQA3:
     def get_qatrack_session(self):
         vals = self.get_config_values('QATrack+ API')[0]
         s = requests.Session()
-        s.headers.update({'Authorization': f"Token {vals['auth token']}"})
+        s.headers['Authorization'] = f"Token {vals['auth token']}"
+        if settings.BROWSER_USER_AGENT:
+            s.headers['User-Agent'] = settings.BROWSER_USER_AGENT
+
         s.verify = vals['verify ssl']
         for prox in ['http', 'https']:
             p = vals[f"{prox} proxy"].strip()
