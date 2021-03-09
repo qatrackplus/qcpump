@@ -886,6 +886,8 @@ class BasePump(wx.Panel):
             )
 
             self.grid_validation_state[result['grid_id']] = result['valid'], result['message']
+            for dependent_section in self.dependencies:
+                self.update_grid_section_choices(self.grids[dependent_section], dependent_section)
 
             self.update_grid_validation_message(result['grid_id'], result['valid'], result['message'])
             self.update_grid_status(result['section'])
