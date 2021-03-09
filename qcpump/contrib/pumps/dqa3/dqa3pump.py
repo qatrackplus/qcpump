@@ -83,6 +83,7 @@ class BaseDQA3:
             version_query = (self.get_pump_path() / "queries" / self.db_type / "db_version.sql").read_text()
             try:
                 self.db_version = self.querier(connect_kwargs, version_query)[0][0]
+                self.db_version = '.'.join(self.db_version.split(".")[:2])
 
                 trend_query_path = self.get_pump_path() / "queries" / self.db_type / self.db_version / "trend.sql"
                 if trend_query_path.is_file():
