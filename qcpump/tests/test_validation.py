@@ -48,3 +48,19 @@ def test_generate_validation_level_subset_doc_example():
     }
     section = 'b'
     assert dependencies.generate_validation_level_subset(section, deps) == [{'b'}, {'d'}]
+
+
+def test_depends_directl_on():
+    deps = {
+        'a': [],
+        'b': ['a'],
+        'c': [],
+        'd': ['b', 'c'],
+    }
+    expected = {
+        'a': set('b'),
+        'b': set('d'),
+        'c': set('d'),
+        'd': set(),
+    }
+    assert dependencies.depends_directly_on(deps) == expected

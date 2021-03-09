@@ -129,7 +129,7 @@ class BaseDQA3:
         self.log_debug(f"Validating units {values}")
 
         if values['dqa3 name'] in (None, '') or values['unit name'] in (None, ''):
-            return False, "Please complete both the DQA3 Name & QATrack+ Unit Name settings"
+            return False, "Please complete both the DQA3 Name and QATrack+ Unit Name settings"
         return True, "OK"
 
     def validate_qatrack(self, values):

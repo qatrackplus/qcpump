@@ -68,3 +68,14 @@ def generate_validation_level_subset(section, dependencies):
                 level_subsets.append(recalc_for_this_level)
 
     return level_subsets
+
+
+def depends_directly_on(dependencies):
+    """Takes a dependency dictionary d and "inverts" it so that d[section] will return
+    the other sections which depend directly on that section"""
+
+    depends_on = {s: set() for s in dependencies.keys()}
+    for s, dependencies in dependencies.items():
+        for dep in dependencies:
+            depends_on[dep].add(s)
+    return depends_on

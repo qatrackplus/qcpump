@@ -136,9 +136,11 @@ EVT_PUMP_STARTING = wx.PyEventBinder(_EVT_PUMP_STARTING, 1)
 _EVT_PUMP_LOG = wx.NewEventType()
 EVT_PUMP_LOG = wx.PyEventBinder(_EVT_PUMP_LOG, 1)
 
-
 _EVT_VALIDATION_COMPLETE = wx.NewEventType()
 EVT_VALIDATION_COMPLETE = wx.PyEventBinder(_EVT_VALIDATION_COMPLETE, 1)
+
+_EVT_INDEPENDENT_CHOICES_COMPLETE = wx.NewEventType()
+EVT_INDEPENDENT_CHOICES_COMPLETE = wx.PyEventBinder(_EVT_INDEPENDENT_CHOICES_COMPLETE, 1)
 
 
 class PumpEvent(wx.PyCommandEvent):
@@ -255,6 +257,7 @@ class BasePump(wx.Panel):
         super().__init__(*args, **kwargs)
 
         self.Bind(EVT_VALIDATION_COMPLETE, self.OnValidationComplete)
+        self.Bind(EVT_INDEPENDENT_CHOICES_COMPLETE, self.OnIndependentChoicesComplete)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
 
     def configure(self, pump_type, name, state=None):
@@ -563,6 +566,7 @@ class BasePump(wx.Panel):
     def update_controls_from_state(self):
         """Take the existing state dictionary and set up all the controls for it"""
 
+        has_independent_choices = set()
         for section, state in self.state.items():
 
             grid = self.grids[section]
@@ -571,6 +575,7 @@ class BasePump(wx.Panel):
             page = grid.GetCurrentPage()
 
             conf = self.configd[section]
+
             for idx, subsection in enumerate(state['subsections']):
 
                 # when there is multiple sub sections add a sub section number
@@ -606,7 +611,39 @@ class BasePump(wx.Panel):
                     )
                     page.Append(field_prop)
 
+                    if not has_dependencies:
+                        has_independent_choices.add(section)
+
+        self.set_independent_choices(has_independent_choices)
         self.resize_grids()
+
+    def set_independent_choices(self, sections):
+
+        t = threading.Thread(
+            target=self._run_independent_choice_threads,
+            args=(sections,),
+            daemon=True,
+        )
+        t.start()
+
+    def _run_independent_choice_threads(self, sections):
+        choice_thread_results = {}
+        choice_threads = []
+        for section in sections:
+            self.log_debug(f"Starting independent choice thread for section {section}")
+            t = threading.Thread(
+                target=self._run_choice_thread,
+                args=(section, choice_thread_results),
+                daemon=True,
+            )
+            t.start()
+            choice_threads.append((section, t))
+
+        for section, t in choice_threads:
+            t.join()
+
+        evt = PumpEvent(_EVT_INDEPENDENT_CHOICES_COMPLETE, wx.ID_ANY, choice_thread_results)
+        wx.PostEvent(self, evt)
 
     def OnDelete(self, event):
         """Handle user asking to delete this pump"""
@@ -710,9 +747,9 @@ class BasePump(wx.Panel):
             state_section['subsections'].append(self.state_fields_from_subsection(config))
             self.update_controls_from_state()
 
-            # need to set choices for this section since the properties in
-            # the new subsection
-            self.update_grid_section_choices(self.grids[config['name']], config['name'])
+            # not sure if this is the correct way to do this since it doesn't
+            # prevent user from editing while fetching the choices
+            self.set_independent_choices([config['name']])
 
     def OnGridChanging(self, evt):
         """Do our field by field validation here since PropertyGridManager's
@@ -790,15 +827,14 @@ class BasePump(wx.Panel):
 
         result_set = {
             'group_id': group_id,
-            'results': []
+            'results': [],
+            'choices': {},
         }
         for level in levels:
 
-            threads = []
-
             # container to hold results from validation threads
             thread_results = {}
-
+            threads = []
             for section in level:
 
                 self.log_debug(f"Starting validation for section {section} {group_id}")
@@ -817,13 +853,50 @@ class BasePump(wx.Panel):
                 threads.append((section, t))
 
             # wait for all threads to finish and set the results
+            needs_new_choices = set()
             for section, t in threads:
                 t.join()
                 result_set['results'].append(thread_results[section])
+                if thread_results[section]['valid']:
+                    for dependent_section in self.depends_on[section]:
+                        needs_new_choices.add(dependent_section)
+
+            # now update choices for dependent sections
+            choice_thread_results = {}
+            choice_threads = []
+            for section in needs_new_choices:
+                self.log_debug(f"Starting choice thread for section {section} {group_id}")
+                t = threading.Thread(
+                    target=self._run_choice_thread,
+                    args=(section, choice_thread_results),
+                    daemon=True,
+                )
+                t.start()
+                choice_threads.append((section, t))
+
+            for section, t in choice_threads:
+                t.join()
+                result_set['choices'][section] = choice_thread_results[section]
 
         # tell main thread validation is finished
         evt = PumpEvent(_EVT_VALIDATION_COMPLETE, wx.ID_ANY, result_set)
         wx.PostEvent(self, evt)
+
+    def _run_choice_thread(self, section, thread_results):
+
+        fields = self.configd[section]['fields']
+        choice_cache = {}
+        for field, field_config in fields.items():
+            is_not_multiple_choice = field_config['type'] != MULTCHOICE
+            if is_not_multiple_choice:
+                continue
+            try:
+                choices = choice_cache[field_config['name']]
+            except KeyError:
+                choices = self.get_field_choices(field_config)
+                choice_cache[field_config['name']] = choices
+
+        thread_results[section] = choice_cache
 
     def _run_validation_thread(self, grid_id, section, validator, validation_data, thread_results):
         """Wrapper around the pumps validator to set results required for updating UI later"""
@@ -862,6 +935,10 @@ class BasePump(wx.Panel):
         }
         return data
 
+    def OnIndependentChoicesComplete(self, evt):
+        choice_thread_results = evt.GetValue()
+        self.update_grid_section_choices(choice_thread_results)
+
     def OnValidationComplete(self, evt):
         """After any validator thread finishes, set the grid validation state,
         and updated any dynamic choices which were dependent on this
@@ -869,9 +946,10 @@ class BasePump(wx.Panel):
 
         result_set = evt.GetValue()
         group_id = result_set['group_id']
+        self.log_debug(f"result set {result_set}")
         for result in result_set['results']:
             if result['exception']:
-                self.logger.critical(result['exception'])
+                self.log_critical(result['exception'])
 
             if self.most_recent_validation_group[result['section']] != group_id:
                 self.log_debug(
@@ -886,9 +964,7 @@ class BasePump(wx.Panel):
             )
 
             self.grid_validation_state[result['grid_id']] = result['valid'], result['message']
-            for dependent_section in self.dependencies:
-                self.update_grid_section_choices(self.grids[dependent_section], dependent_section)
-
+            self.update_grid_section_choices(result_set['choices'])
             self.update_grid_validation_message(result['grid_id'], result['valid'], result['message'])
             self.update_grid_status(result['section'])
 
@@ -925,18 +1001,9 @@ class BasePump(wx.Panel):
         kwargs = {'label': label, 'name': fname, 'value': value}
         if ftype == MULTCHOICE:
 
-            if has_dependencies:
-                # Since the choices for this field may depend on other grids,
-                # the choices will have to be set after those dependencies are
-                # validated.  Right now set placeholder choices/value so that
-                # we can keep track of what the value should be
-                choices, idx = [value], 0
-            else:
-                # these choices are not dependent on other grids so we can
-                # grab them now and save having to do them after validation
-                choices = self.get_field_choices(field)
-                idx = choices.index(value) if value in choices else 0
-
+            # just start with a single choice that is set to the input value
+            # because we will be fetching our choices later
+            choices, idx = [value], 0
             kwargs['labels'] = choices
             kwargs['value'] = idx
 
@@ -989,6 +1056,7 @@ class BasePump(wx.Panel):
 
     def set_dependencies(self):
         self.dependencies = {s: set(f['dependencies']) for s, f in self.configd.items()}
+        self.depends_on = dependencies.depends_directly_on(self.dependencies)
         self.validation_levels = dependencies.generate_validation_levels(self.dependencies)
 
     def validate_all(self):
@@ -1064,45 +1132,37 @@ class BasePump(wx.Panel):
                 deps_not_completed.append(dep)
         return deps_not_completed
 
-    def update_grid_section_choices(self, grid, section_name):
-        """Iterate over all properties in a grid and update choices for
-        all properties which have choices.  This is necessary because the
-        choices can be set dynamically based on other sections"""
+    def update_grid_section_choices(self, choices):
+        """Set property choices for all sections/fields in choices argument"""
 
-        # For grids with multiple subsections we can cache the choices so
-        # that we don't need to get them for each subsection
-        choice_cache = {}
+        for section, field_choices in choices.items():
+            grid = self.grids[section]
 
-        for prop in grid.Properties:
+            for prop in grid.Properties:
 
-            field_name = prop.GetClientData()['field_name']
-            field_config = self.configd[section_name]['fields'][field_name]
+                field_name = prop.GetClientData()['field_name']
+                field_config = self.configd[section]['fields'][field_name]
 
-            is_not_multiple_choice = field_config['type'] != MULTCHOICE
-            if is_not_multiple_choice:
-                continue
+                is_not_multiple_choice = field_config['type'] != MULTCHOICE
+                if is_not_multiple_choice:
+                    continue
 
-            # get the currently selected choice so we can reselect it after if
-            # it is present in the new chocies
-            cur_selected = prop.GetValueAsString()
+                # get the currently selected choice so we can reselect it after if
+                # it is present in the new chocies
+                cur_selected = prop.GetValueAsString()
+                new_choices = field_choices[field_name]
 
-            try:
-                new_choices = choice_cache[field_config['name']]
-            except KeyError:
-                new_choices = self.get_field_choices(field_config)
-                choice_cache[field_config['name']] = new_choices
+                prop.SetChoices(wxpg.PGChoices(new_choices))
 
-            prop.SetChoices(wxpg.PGChoices(new_choices))
-
-            # and select appropriate choices
-            if cur_selected in new_choices:
-                # reselect previous choice if possible
-                prop.SetValue(new_choices.index(cur_selected))
-            else:
-                # previous selection not available so set to default if possible
-                default = field_config.get('default', "")
-                val = new_choices.index(default) if default in new_choices else None
-                prop.SetValue(val)
+                # and select appropriate choices
+                if cur_selected in new_choices:
+                    # reselect previous choice if possible
+                    prop.SetValue(new_choices.index(cur_selected))
+                else:
+                    # previous selection not available so set to default if possible
+                    default = field_config.get('default', "")
+                    val = new_choices.index(default) if default in new_choices else None
+                    prop.SetValue(val)
 
     def get_config_values(self, section):
         """
