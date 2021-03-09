@@ -39,11 +39,19 @@ Configure Test Lists
 
 .. note::
 
-    In order to simplify the creation of these test lists, QCPump provides a number
-    of `Test Packs
-    <https://docs.qatrackplus.com/en/latest/admin/qa/testpack.html>`_ for common
-    beam energies.  The Test Packs may be downloaded from `GitHub
-    <https://github.com/qatrackplus/qcpump/tree/master/qcpump/contrib/pumps/dqa3fbd/testpacks>`_.
+    In order to simplify the creation of these test lists, there is a script
+    included with QATrack+ v3.1.0+ to generate either a `Test Pack
+    <https://docs.qatrackplus.com/en/latest/admin/qa/testpack.html>`_ or to 
+    create a TestList directly in your database.  To run the script activate
+    your virtualenv, changed to the QATrack+ root directory and then run
+
+    .. code-block::
+
+        # create a 6X test list in the db (replace 6X with your beam type)
+        python manage.py runscript create_dqa3_testlist --script-args db 6X
+
+        # or create a 9E test pack (replace 9E with your beam type)
+        python manage.py runscript create_dqa3_testlist --script-args testpack 9E
 
 
 QCPump requires QATrack+ to have a Test List configured for each beam type you
@@ -172,7 +180,7 @@ Data Key Test Name
     Enter a template for searching QATrack+ for the name of the Test you
     want to use to ensure duplicate results are not uploaded. The default is :
 
-        `Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}`
+        `Daily QA3 Results: {{ energy }}{{ beam_type }}: Data Key`
 
     In the template `{{ energy }}` will be replaced by the DQA3 beam energy
     (e.g. 6, 10, 15) and `{{ beam_type }}` will be replaced by the DQA3 beam

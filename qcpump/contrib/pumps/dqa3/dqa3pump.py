@@ -51,7 +51,7 @@ class BaseDQA3:
         if "{{beam_type}}" not in data_key or "{{energy}}" not in data_key:
             msg = (
                 "You must include template variables for energy & beam_type e.g. "
-                "'Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}'"
+                "'Daily QA3 Results: {{ energy }}{{ beam_type }}: Data Key'"
             )
             return False, msg
         return True, "OK"
@@ -628,7 +628,7 @@ class FirebirdDQA3(BaseDQA3, BasePump):
                         "Enter a template for the name of the QATrack+ Test used "
                         "for tracking which DQA3 Record was uploaded"
                     ),
-                    'default': "Daily QA3 Results: Data Key {{ energy }}{{ beam_type }}",
+                    'default': 'Daily QA3 Results: {{ energy }}{{ beam_type }}: Data Key',
                 },
             ]
         },
