@@ -876,13 +876,13 @@ class BasePump(wx.Panel):
             if self.most_recent_validation_group[result['section']] != group_id:
                 self.log_debug(
                     f"Ignoring results from group {group_id} for "
-                    "section {result['section']} because they are not the latest"
+                    f"section {result['section']} because they are not the latest"
                 )
                 continue
 
             self.log_debug(
                 f"Using results from group {group_id} for "
-                "section {result['section']} because they are the most recent"
+                f"section {result['section']} because they are the most recent"
             )
 
             self.grid_validation_state[result['grid_id']] = result['valid'], result['message']
