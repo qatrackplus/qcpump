@@ -946,7 +946,6 @@ class BasePump(wx.Panel):
 
         result_set = evt.GetValue()
         group_id = result_set['group_id']
-        self.log_debug(f"result set {result_set}")
         for result in result_set['results']:
             if result['exception']:
                 self.log_critical(result['exception'])

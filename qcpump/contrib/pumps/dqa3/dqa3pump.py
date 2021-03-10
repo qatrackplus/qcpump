@@ -1,4 +1,6 @@
+import csv
 import datetime
+import io
 import json
 import time
 
@@ -286,7 +288,8 @@ class BaseDQA3:
                 continue
 
             self.log_info(
-                f"Successfully recorded data_key={data_key} for {energy}{beam_type} from {row['work_completed']}"
+                f"Successfully recorded data_key={data_key} for {row['dqa3_unit_name']} {energy}{beam_type}  "
+                f"from {row['work_completed']}"
             )
         else:
             units = ', '.join(self.unit_map.keys())
@@ -567,7 +570,7 @@ class FirebirdDQA3(BaseDQA3, BasePump):
                     'type': STRING,
                     'required': True,
                     'help': "Enter the authorization token for the QATrack+ instance you want to upload data to",
-                    'default': '97qf5be0362ef907dba79c24a31a6ndeobbnef54',
+                    'default': 'd8a65e755a1f9fe8df40d9a15fcd29565f2504cd',
                 },
                 {
                     'name': 'throttle',
@@ -656,11 +659,6 @@ class FirebirdDQA3(BaseDQA3, BasePump):
             ],
         },
     ]
-
-    def prepare_dqa3_query(self):
-        q, params = super().prepare_dqa3_query()
-        q = q.replace("%s", "?")
-        return q, params
 
 
 class AtlasDQA3(BaseDQA3, BasePump):
@@ -769,7 +767,7 @@ class AtlasDQA3(BaseDQA3, BasePump):
                     'type': STRING,
                     'required': True,
                     'help': "Enter the authorization token for the QATrack+ instance you want to upload data to",
-                    'default': '97qf5be0362ef907dba79c24a31a6ndeobbnef54',
+                    'default': 'd8a65e755a1f9fe8df40d9a15fcd29565f2504cd',
                 },
                 {
                     'name': 'throttle',
@@ -858,3 +856,50 @@ class AtlasDQA3(BaseDQA3, BasePump):
             ],
         },
     ]
+
+
+class FileUploadMixin:
+
+    def __new__(cls, *args, **kwargs):
+        klass = super().__new__(cls, *args, **kwargs)
+        for config in klass.CONFIG:
+            if config['name'] == "Test List":
+                for field in config['fields']:
+                    if field['name'] == "name":
+                        field['default'] = "Daily QA3 Upload Results: {{ energy }}{{ beam_type }}"
+
+        return klass
+
+    def generate_payload(self, row):
+        payload = super().generate_payload(row)
+        if not payload:
+            return payload
+        return self.payload_to_csv_file(payload)
+
+    def payload_to_csv_file(self, payload):
+
+        f = io.StringIO()
+        writer = csv.writer(f, delimiter=",", quotechar='"')
+        writer.writerow(["Field", "Value"])
+        tests = payload.pop('tests')
+        for k, v in tests.items():
+            writer.writerow([k, v])
+
+        f.seek(0)
+        payload['tests'] = {
+            'data_key': {'value': tests['data_key']},
+            'dqa3_upload': {
+                'encoding': 'text',
+                'value': f.read(),
+                'filename': f"dqa3_{tests['data_key']['value']}.csv",
+            }
+        }
+        return payload
+
+
+class FirebirdDQA3FileUpload(FileUploadMixin, FirebirdDQA3):
+    pass
+
+
+class AtlasDQA3FileUpload(FileUploadMixin, AtlasDQA3):
+    pass
