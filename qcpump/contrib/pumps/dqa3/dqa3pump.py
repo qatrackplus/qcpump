@@ -251,6 +251,7 @@ class BaseDQA3:
             # don't run a DOS attack on your QATrack+ instance!
             time.sleep(throttle)
 
+            row['data_key'] = str(row['data_key'])
             data_key = row['data_key']
 
             if self.should_terminate():
