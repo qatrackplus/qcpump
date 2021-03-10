@@ -657,6 +657,11 @@ class FirebirdDQA3(BaseDQA3, BasePump):
         },
     ]
 
+    def prepare_dqa3_query(self):
+        q, params = super().prepare_dqa3_query()
+        q = q.replace("%s", "?")
+        return q, params
+
 
 class AtlasDQA3(BaseDQA3, BasePump):
 
