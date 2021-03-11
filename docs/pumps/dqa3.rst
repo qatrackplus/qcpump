@@ -38,7 +38,10 @@ Create an API Token
 In order to upload your data to QATrack+ via the API you will require an API
 token.  See the `QATrack+ documentation
 <https://docs.qatrackplus.com/en/latest/api/guide.html#getting-an-api-token>`_
-for how to create an API token
+for how to create an API token.  You may wish to create a dedicated user in
+QATrack+ just for use with QCPump.  The user will only need a single permission
+in order to upload data: `qa | test list instance | Can add test list
+instance`.
 
 
 Configure Test Lists
