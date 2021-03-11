@@ -6,6 +6,7 @@ import time
 
 import jinja2
 import requests
+from pypac import PACSession
 
 from qcpump.core.db import firebirdsql_query, fdb_query, mssql_query
 from qcpump.core.json import QCPumpJSONEncoder
@@ -141,15 +142,9 @@ class BaseDQA3:
             url += "/"
 
         url += "auth/"
-
-        token = values['auth token']
-        verify_ssl = values['verify ssl']
-
-        headers = {'Authorization': f"Token {token}"}
-        if settings.BROWSER_USER_AGENT:
-            headers['User-Agent'] = settings.BROWSER_USER_AGENT
         try:
-            resp = requests.get(url, headers=headers, verify=verify_ssl, allow_redirects=False)
+            session = self.get_qatrack_session(values)
+            resp = session.get(url, allow_redirects=False)
             if resp.status_code == 200:
                 valid = True
                 msg = "Connected Successfully"
@@ -169,9 +164,9 @@ class BaseDQA3:
 
         return valid, msg
 
-    def get_qatrack_session(self):
-        vals = self.get_config_values('QATrack+ API')[0]
-        s = requests.Session()
+    def get_qatrack_session(self, values=None):
+        vals = values or self.get_config_values('QATrack+ API')[0]
+        s = PACSession()
         s.headers['Authorization'] = f"Token {vals['auth token']}"
         if settings.BROWSER_USER_AGENT:
             s.headers['User-Agent'] = settings.BROWSER_USER_AGENT
@@ -435,7 +430,16 @@ class BaseDQA3:
         return template.render(context)
 
     def energy_and_beam_type_for_row(self, row):
-        beam_type = 'X' if row['beamtype'].lower() == "photon" else 'E'
+
+        dqa_beam_type = row['beamtype'].lower()
+
+        if dqa_beam_type == "fff":
+            beam_type = "FFF"
+        elif dqa_beam_type == "electron":
+            beam_type = "E"
+        else:
+            beam_type = "X"
+
         energy = row['beamenergy']
         return energy, beam_type
 
