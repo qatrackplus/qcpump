@@ -58,7 +58,7 @@ and then to run the program:
 
 .. code:: bash
 
-    python qcpump.py
+    python launch_qcpump.py
 
 Now you can proceed to the :ref:`pumps-configure-new` page to start configuring
 some *Pumps*.

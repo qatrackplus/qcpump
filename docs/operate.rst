@@ -8,7 +8,7 @@ Running your Pumps
 ------------------
 
 After you've configured and :ref:`saved at least one Pump <pumps-save>` you can
-run all active pumps bu clicking the `Run Pumps` toggle button at the top of the
+run all active pumps by clicking the `Run Pumps` toggle button at the top of the
 QCPump window.  
 
 Stopping your Pumps
@@ -67,12 +67,11 @@ PUMP_DIRECTORIES
 
 A sample settings.json document might look like:
 
-.. code:: json
-
+.. code-block:: javascript
 
     {
         "LOG_LEVEL": "info",
         "DEBUG": False,
         "PUMP_DIRECTORIES": ["C:\Users\yourusername\pumps\"],
-        "DB_CONNECT_TIMEOUT": 3,
+        "DB_CONNECT_TIMEOUT": 3
     }
