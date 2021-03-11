@@ -70,16 +70,19 @@ class QCPumpUI(ui.VQCPumpUI):
 
         # root directy where configuration directories/files are stored
         config_path = self.get_pump_config_dir()
+        pumps_to_load = []
         for path in config_path.glob("*/config.json"):
             try:
                 logger.debug(f"Trying to load pump config from {path}")
                 save_data = json.load(path.open("r"))
                 logger.debug(f"Loaded pump config from {path}")
+                pumps_to_load.append((save_data['name'], save_data))
             except Exception as e:
                 self.non_fatal_error(f"Failed to load pump config from {path}", e)
 
+        for name, save_data in sorted(pumps_to_load):
             try:
-                self.add_pump_page(save_data['type'], save_data['name'], save_data['state'])
+                self.add_pump_page(save_data['type'], name, save_data['state'])
             except Exception as e:
                 self.non_fatal_error(f"Failed to initialize pump config from {path}", e)
 
