@@ -2,14 +2,30 @@ import datetime
 import re
 from pathlib import Path
 
-from qcpump.pumps.base import DIRECTORY, BasePump, INT
-from qcpump.pumps.common.qatrack import QATrackAPIMixin
+import jinja2
+
+from qcpump.pumps.base import DIRECTORY, BasePump, INT, STRING
+from qcpump.pumps.common.qatrack import QATrackFetchAndPostTextFile
+
+MPC_PATH_RE = re.compile(r"""
+     .*                     # preamble like NDS-WKS
+     SN(?P<serial_no>\w+)-  # serial number
+     (?P<year>\d\d\d\d)-    # year
+     (?P<month>\d\d)-       # month
+     (?P<day>\d\d)-         # day
+     (?P<hour>\d\d)-        # hour
+     (?P<min>\d\d)-         # min
+     (?P<sec>\d\d)-         # sec
+     (?P<unknown>\d\d\d\d)- # don't know what these 4 digist represent
+     (?P<template>.*)       # template e.g. BeamCheckTemplate
+     (?P<energy>\d+)        # energy like 6, 9, 12
+     (?P<beam_type>[xXeE]+)  # beam type like x, e
+     (?P<fff>[fF]+)?        # is FFF or not?
+     (?P<enhanced>.*)?      # Whether enhanced test or not e.g. MVkVEnhancedCouch
+ """, re.X)
 
 
-PATH_DATE_RE = re.compile(r".*(\d\d\d\d)-(\d\d)-(\d\d)-(\d\d)-(\d\d).*")
-
-
-class QATrackMPCPump(QATrackAPIMixin, BasePump):
+class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
 
     CONFIG = [
         {
@@ -34,7 +50,26 @@ class QATrackMPCPump(QATrackAPIMixin, BasePump):
                 },
             ],
         },
-        QATrackAPIMixin.QATRACK_API_CONFIG,
+        QATrackFetchAndPostTextFile.QATRACK_API_CONFIG,
+        {
+            'name': "Test List",
+            'multiple': False,
+            'dependencies': ["QATrack+ API"],
+            'validation': 'validate_test_list',
+            'fields': [
+                {
+                    'name': 'name',
+                    'type': STRING,
+                    'required': True,
+                    'help': "Enter a template for the name of the Test List you want to upload data to.",
+                    'default': (
+                        "MPC: {{ template}}{% if enhanced %} {{ enhanced }}{% endif %} "
+                        "{{ energy }}{{ beam_type }}{{ fff }}",
+                    )
+                },
+            ]
+        }
+
     ]
 
     def validate_mpc(self, values):
@@ -47,68 +82,75 @@ class QATrackMPCPump(QATrackAPIMixin, BasePump):
 
         return valid, ','.join(msg) or 'OK'
 
+    def validate_test_list(self, values):
+        name = values['name'].replace(" ", "")
+        required = ["template", "enhanced", "energy", "beam_type", "fff"]
+        all_present = all("{{%s}}" % f in name for f in required)
+        if not all_present:
+            return False, f"You must include template variables for all of the folowing: {', '.join(required)}"
+        return True, "OK"
+
     def pump(self):
+        self._unit_cache = {}
+        self._record_meta_cache = {}
+        return super().pump()
 
-        self.log_debug("Starting to pump")
-        terminate = False
-
+    def fetch_records(self):
+        """Return a llist of Path objects representing Results.csv files"""
         source = self.get_config_value("QATrackMPC", "tds directory")
-        paths = list(Path(source).glob("**/Results.csv"))
-        for path in paths:
-            fname = self.filename_from_path(path, with_ext=False)
-            if self.is_already_processed(fname):
-                self.log_info(f"Found existing result with filename={fname}")
-                continue
+        return [p.absolute() for p in Path(source).glob("**/Results.csv")]
 
-            self.log_debug(f"Found path {'/'.join(path.parts[-2:])} from date {payload['work_completed']}")
+    def slug_and_value_to_check_for_duplicates(self, record):
+        fname = self.filename_from_path(record, with_ext=False)
+        return "mpc_upload", fname
 
-            payload = self.generate_payload(path)
-            if payload is None:
-                continue
+    def test_list_for_record(self, record):
+        meta = self.record_meta(record)
+        tl_name_template = self.get_config_value("Test List", "name")
+        template = jinja2.Template(tl_name_template, undefined=jinja2.StrictUndefined)
+        return template.render(meta)
 
-    def generate_payload(self, path):
+    def record_meta(self, record):
+        try:
+            meta = self._record_meta_cache[str(record)]
+        except KeyError:
+            meta = MPC_PATH_RE.match(record).groupdict()
+            meta['fff'] = "FFF" if meta['fff'] else ''
+            meta['beam_type'] = meta['beam_type'].upper()
+            self._record_meta_cache[str(record)] = meta
 
-        work_started = self.date_from_path(path)
-        work_completed = work_started + datetime.timedelta(minutes=1)
-        utc_url = self.generate_utc_url(path)
-        payload = {
-            'unit_test_collection': utc_url,
-            'work_started': work_started,
-            'work_completed': work_completed,
-            'tests': {
-                'mpc_upload': {
-                    'value': path.read_text(),
-                    'filename': self.filename_from_path(path),
-                }
-            }
-        }
-        return payload
+        return meta
 
-    def date_from_path(self, path):
+    def record_serial_no(self, record):
+        return self.record_meta(record)['serial_no']
+
+    def record_date(self, record):
+        m = self.record_meta(record)
+        return datetime.datetime(m['year'], m['month'], m['day'], m['hour'], m['min'], m['sec'])
+
+    def qatrack_unit_for_record(self, record):
+        """Get unit serial number from record and return qatrack unit name for that unit"""
+
+        if not self._unit_cache:
+            endpoint = self.construct_api_url("units/units")
+            units = self.get_qatrack_choices(endpoint)
+            self._unit_cache = {u['serial_number']: u for u in units}
+
+        sn = self.record_serial_no()
+
+        try:
+            return self._unit_cache[sn]['name']
+        except KeyError:
+            self.log_error(f"No QATrack+ Unit found with Serial Number {sn}")
+
+    def work_datetimes_for_record(self, record):
         """Pull date out of file path and return datetime object"""
-        date_parts = map(int, PATH_DATE_RE.match(str(path)).groups())
-        return datetime.datetime(*date_parts)
-
-    def generate_utc_url(self, path):
-        return ""
+        work_started = self.record_date(record)
+        work_completed = work_started + datetime.timedelta(seconds=1)
+        return work_started, work_completed
 
     def filename_from_path(self, path, with_ext=True):
         folder = path.parent.parts[-1]
         if with_ext:
             return f"{folder}_Results.csv"
         return f"{folder}_Results"
-
-    def is_already_processed(self, string_val):
-
-        session = self.get_qatrack_session()
-        url = self.construct_api_url("qa/testinstances")
-        query_params = {
-            'unit_test_info__test__slug': "mpc_upload",
-            'attachments__attachment__icontains': string_val,
-        }
-        try:
-            resp = session.get(url, params=query_params)
-            return resp.json()['count'] >= 1
-        except Exception as e:
-            self.log_debug(f"Querying API for duplicates failed: {e}")
-            return False

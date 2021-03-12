@@ -307,7 +307,7 @@ class BaseDQA3:
             tl_name = self.test_list_name(energy, beam_type)
             self.log_error(
                 f"UTC URL for Unit: {unit_name} & Test List: {tl_name} not found. "
-                f"Skiping record with data_key={data_key}."
+                f"Skipping record with data_key={data_key}."
             )
             return
 
