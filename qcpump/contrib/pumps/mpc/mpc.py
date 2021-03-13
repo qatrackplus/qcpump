@@ -64,7 +64,7 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
                     'help': "Enter a template for the name of the Test List you want to upload data to.",
                     'default': (
                         "MPC: {{ template}}{% if enhanced %} {{ enhanced }}{% endif %} "
-                        "{{ energy }}{{ beam_type }}{{ fff }}",
+                        "{{ energy }}{{ beam_type }}{{ fff }}"
                     )
                 },
             ]
