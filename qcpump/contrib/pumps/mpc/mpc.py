@@ -29,7 +29,7 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
 
     CONFIG = [
         {
-            'name': 'QATrackMPC',
+            'name': 'MPC',
             'multiple': False,
             'validation': 'validate_mpc',
             'fields': [
@@ -38,7 +38,7 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
                     'label': 'TDS Directory',
                     'type': DIRECTORY,
                     'required': True,
-                    'help': "Select the TDS directory (e.g. I:\\TDS)",
+                    'help': "Select the TDS directory (e.g. I:\\TDS or \\\\YOURSERVER\\VA_Transer\\TDS)",
                 },
                 {
                     'name': 'history days',
@@ -63,8 +63,7 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
                     'required': True,
                     'help': "Enter a template for the name of the Test List you want to upload data to.",
                     'default': (
-                        "MPC: {{ template}}{% if enhanced %} {{ enhanced }}{% endif %} "
-                        "{{ energy }}{{ beam_type }}{{ fff }}"
+                        "MPC: {{ template }} {{ energy }}{{ beam_type }}"
                     )
                 },
             ]
@@ -75,16 +74,26 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
     def validate_mpc(self, values):
         """Ensure that both source and destination directories are set."""
 
-        valid = bool(values['tds directory'])
+        valid = True
         msg = []
         if not values['tds directory']:
             msg.append("You must set a source TDS directory")
+            valid = False
+        else:
+            try:
+                p = Path(values['tds directory'].replace("\\", "/")).absolute()
+                if not p.is_dir():
+                    valid = False
+                    msg.append(f"{values['tds directory']} is not a valid directory")
+            except Exception:
+                valid = False
+                msg.append(f"{values['tds directory']} is not a valid file path")
 
         return valid, ','.join(msg) or 'OK'
 
     def validate_test_list(self, values):
         name = values['name'].replace(" ", "")
-        required = ["template", "enhanced", "energy", "beam_type", "fff"]
+        required = ["template", "energy", "beam_type"]
         all_present = all("{{%s}}" % f in name for f in required)
         if not all_present:
             return False, f"You must include template variables for all of the folowing: {', '.join(required)}"
@@ -97,7 +106,7 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
 
     def fetch_records(self):
         """Return a llist of Path objects representing Results.csv files"""
-        source = self.get_config_value("QATrackMPC", "tds directory")
+        source = self.get_config_value("MPC", "tds directory").replace("\\", "/")
         return [p.absolute() for p in Path(source).glob("**/Results.csv")]
 
     def slug_and_value_to_check_for_duplicates(self, record):
@@ -114,9 +123,14 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
         try:
             meta = self._record_meta_cache[str(record)]
         except KeyError:
-            meta = MPC_PATH_RE.match(record).groupdict()
+            meta = MPC_PATH_RE.match(str(record)).groupdict()
             meta['fff'] = "FFF" if meta['fff'] else ''
-            meta['beam_type'] = meta['beam_type'].upper()
+            meta['beam_type'] = "FFF" if meta['fff'] else meta['beam_type'].upper()
+            enhanced = meta['enhanced']
+            if enhanced:
+                temp = meta['template']
+                meta['template_no_enhanced'] = temp
+                meta['template'] = "%s %s" % (temp, meta['enhanced'])
             self._record_meta_cache[str(record)] = meta
 
         return meta
@@ -136,7 +150,7 @@ class QATrackMPCPump(QATrackFetchAndPostTextFile, BasePump):
             units = self.get_qatrack_choices(endpoint)
             self._unit_cache = {u['serial_number']: u for u in units}
 
-        sn = self.record_serial_no()
+        sn = self.record_serial_no(record)
 
         try:
             return self._unit_cache[sn]['name']
