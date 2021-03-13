@@ -114,7 +114,6 @@ PROPERTY_VALIDATORS = {
     INT: MaxMinValidator,
     UINT: MaxMinValidator,
     FLOAT: MaxMinValidator,
-    DIRECTORY: DirValidator,
 }
 
 
@@ -761,7 +760,7 @@ class BasePump(wx.Panel):
         new_value = evt.GetPropertyValue()
         validator = prop.GetValidator()
 
-        if validator and not validator.ValidateValue(new_value):
+        if validator and hasattr(validator, "ValidateValue") and not validator.ValidateValue(new_value):
             evt.Veto()
         else:
             evt.Skip()
