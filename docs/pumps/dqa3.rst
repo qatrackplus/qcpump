@@ -290,6 +290,41 @@ History Days
     fetched.
 
 
+.. note::
+
+    If you want to create a read only user to access your Firebird database
+    you can do so as follows:
+
+    #. Create a file call create_ro_user.sql with the following contents,
+       replacing the file path, user, and password to match the database
+       location and authentication information for your database:
+
+        .. code:: sql
+
+            CONNECT "C:\Path\To\Your\Database\Sncdata.fdb" user "sysdba" password "masterkey";
+            CREATE USER qcpump PASSWORD 'qcpump';
+            GRANT SELECT ON atlas_master to USER qcpump;
+            GRANT SELECT ON dqa3_machine to USER qcpump;
+            GRANT SELECT ON dqa3_trend to USER qcpump;
+            GRANT SELECT ON dqa3_data to USER qcpump;
+            GRANT SELECT ON device to USER qcpump;
+            GRANT SELECT ON dqa3_calibration to USER qcpump;
+            GRANT SELECT ON dqa3_template to USER qcpump;
+            GRANT SELECT ON dqa3_machine to USER qcpump;
+
+    #. Open a Powershell or CMD prompt and enter the following command,
+       replacing the `C:\\Path\\To\\create_ro_role.sql` with the actual
+       file location where you saved the file:
+
+        .. code:: console
+
+            isql.exe -i C:\Path\To\create_ro_role.sql
+
+    #. You should now be able to use the username `qcpump` and password
+       `qcpump` for the `User` and `Password` settings described above.
+
+
+
 .. _pump_type-dqa3-atlas:
 
 Atlas (SQL Server) DQA3 Pump Type
