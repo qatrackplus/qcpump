@@ -177,7 +177,9 @@ class QATrackFetchAndPost(QATrackAPIMixin):
 
         throttle = self.get_config_value("QATrack+ API", "throttle")
 
-        for record in self.fetch_records():
+        records = self.fetch_records()
+
+        for record in records:
 
             # don't run a DOS attack on your QATrack+ instance!
             time.sleep(throttle)
@@ -224,15 +226,15 @@ class QATrackFetchAndPost(QATrackAPIMixin):
     def fetch_records(self):
         return []
 
-    def slug_and_value_to_check_for_duplicates(self, record):
-        raise NotImplementedError
-
     def test_list_for_record(self, record):
         """Accept a record to process and return a test list name. Must be overridden in subclasses"""
         raise NotImplementedError
 
     def qatrack_unit_for_record(self, record):
         """Accept a record to process and return a QATrack+ Unit name. Must be overridden in subclasses"""
+        raise NotImplementedError
+
+    def id_for_record(self, record):
         raise NotImplementedError
 
     def work_datetimes_for_record(self, record):
@@ -250,32 +252,22 @@ class QATrackFetchAndPost(QATrackAPIMixin):
         """Which cycle day is being performed? Use 0 for test lists"""
         return 0
 
-    def id_for_record(self, record):
-        slug, value = self.slug_and_value_to_check_for_duplicates(record)
-        return value
-
     def _is_already_recorded(self, record):
         """Implement a check to determine whether a record has already been processed or not"""
         session = self.get_qatrack_session()
-        url = self.construct_api_url("qa/testinstances")
-        slug, value = self.slug_and_value_to_check_for_duplicates(record)
-        query_params = self._duplicate_query_params(slug, value)
+        url = self.construct_api_url("qa/testlistinstances")
+        record_id = self.id_for_record(record)
         try:
-            resp = session.get(url, params=query_params)
+            resp = session.get(url, params={'user_key': record_id})
             return resp.json()['count'] >= 1
         except Exception as e:
             self.log_debug(f"Querying API for duplicates failed: {e}")
             return False
 
-    def _duplicate_query_params(self, slug, value):
-        return {
-            'unit_test_info__test__slug': slug,
-            'string_value': value,
-        }
-
     def _generate_payload(self, record):
         """Convert record to json payload suitable for posting to QATrack+ to perform a test list"""
 
+        test_values_from_record = self.test_values_from_record(record)
         utc_url = self._utc_url_for_record(record)
         if not utc_url:
             unit_name = self.qatrack_unit_for_record(record)
@@ -288,7 +280,6 @@ class QATrackFetchAndPost(QATrackAPIMixin):
             return
 
         work_started, work_completed = self.work_datetimes_for_record(record)
-        test_values_from_record = self.test_values_from_record(record)
         comment = self.comment_for_record(record)
         day = self.cycle_day_for_record(record)
 

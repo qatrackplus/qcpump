@@ -29,6 +29,8 @@ settings = Settings()
 
 class BaseDQA3:
 
+    HELP_URL = "https://qcpump.readthedocs.io/en/stable/pumps/dqa3.html"
+
     query_parameter = "?"
 
     TEST_LIST_CONFIG = {

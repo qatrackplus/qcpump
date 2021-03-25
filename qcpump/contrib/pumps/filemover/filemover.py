@@ -5,6 +5,8 @@ from qcpump.pumps.base import BOOLEAN, DIRECTORY, STRING, BasePump
 
 class SimpleFileMover(BasePump):
 
+    HELP_URL = "https://qcpump.readthedocs.io/en/stable/pumps/filemover.html"
+
     CONFIG = [
         {
             'name': 'SimpleFileMover',
@@ -79,6 +81,8 @@ class SimpleFileMover(BasePump):
 
 
 class FileMover(BasePump):
+
+    HELP_URL = "https://qcpump.readthedocs.io/en/stable/pumps/filemover.html"
 
     CONFIG = [
         {
