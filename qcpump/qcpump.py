@@ -44,7 +44,7 @@ class QCPumpUI(ui.VQCPumpUI):
 
         ico = wx.IconBundle()
         icon_path = settings.get_img_path("qcpump.ico")
-        logger.critical(f"Loading icons from {icon_path}")
+        logger.debug(f"Loading icons from {icon_path}")
         ico.AddIcon(icon_path)
         self.SetTitle(f"QCPump - {settings.VERSION}")
         self.SetIcons(ico)
@@ -70,18 +70,22 @@ class QCPumpUI(ui.VQCPumpUI):
 
         # root directy where configuration directories/files are stored
         config_path = self.get_pump_config_dir()
+        pumps_to_load = []
         for path in config_path.glob("*/config.json"):
             try:
                 logger.debug(f"Trying to load pump config from {path}")
                 save_data = json.load(path.open("r"))
                 logger.debug(f"Loaded pump config from {path}")
+                pumps_to_load.append((save_data['name'], save_data))
             except Exception as e:
                 self.non_fatal_error(f"Failed to load pump config from {path}", e)
 
+        for name, save_data in sorted(pumps_to_load):
             try:
-                self.add_pump_page(save_data['type'], save_data['name'], save_data['state'])
+                self.add_pump_page(save_data['type'], name, save_data['state'])
             except Exception as e:
                 self.non_fatal_error(f"Failed to initialize pump config from {path}", e)
+                self.remove_pump_page(name)
 
         at_least_one_pump_loaded = self.pump_notebook.GetPageCount() > 0
         if at_least_one_pump_loaded:
@@ -167,13 +171,16 @@ class QCPumpUI(ui.VQCPumpUI):
             self.non_fatal_error(f"Unable to delete {config_file} from disk", e)
             return False
 
+        self.remove_pump_page(name)
+        self.config_changed()
+
+        return True
+
+    def remove_pump_page(self, name):
         page = self.pump_windows.pop(name)
         page_idx = self.pump_notebook.GetChildren().index(page)
         self.pump_notebook.DeletePage(page_idx)
         self.pump_notebook.SendSizeEvent()
-        self.config_changed()
-
-        return True
 
     def set_pump_name(self, page_name, page_label):
         """Update a notebook page label"""
@@ -233,6 +240,10 @@ class QCPumpUI(ui.VQCPumpUI):
         """The application can't recover from an error. Log the error, show user a message and quit"""
         if exception:
             logger.exception(msg)
+
+        wx.CallAfter(self._fatal_error, msg)
+
+    def _fatal_error(self, msg):
         wx.MessageBox(f"Fatal Error: {msg}\n\nPlease check the log file for details.")
         self.destroy()
 
@@ -240,7 +251,8 @@ class QCPumpUI(ui.VQCPumpUI):
         """The application can recover from an error. Log the error, show user a message and continue"""
         if exception:
             logger.exception(msg)
-        wx.MessageBox(f"Warning: {msg}\n\nPlease check the log file for details.")
+
+        wx.CallAfter(wx.MessageBox, f"Warning: {msg}\n\nPlease check the log file for details.")
 
     def start_pumps(self):
         """Configs are all valid. Start the pumps!"""
@@ -387,10 +399,10 @@ class QCPumpUI(ui.VQCPumpUI):
 
     def OnIdle(self, event):
         if not self._init_finished and self._show_completed:
+            self._init_finished = True
             self.log("qcpump", logging.DEBUG, "Starting to load existing pumps")
             self.load_existing_pumps()
             self.log("qcpump", logging.DEBUG, "Completed load of existing pumps")
-            self._init_finished = True
 
 
 class StatusPanel(ui.VStatusPanel):

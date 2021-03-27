@@ -29,6 +29,8 @@ settings = Settings()
 
 class BaseDQA3:
 
+    HELP_URL = "https://qcpump.readthedocs.io/en/stable/pumps/dqa3.html"
+
     query_parameter = "?"
 
     TEST_LIST_CONFIG = {
@@ -307,7 +309,7 @@ class BaseDQA3:
             tl_name = self.test_list_name(energy, beam_type)
             self.log_error(
                 f"UTC URL for Unit: {unit_name} & Test List: {tl_name} not found. "
-                f"Skiping record with data_key={data_key}."
+                f"Skipping record with data_key={data_key}."
             )
             return
 

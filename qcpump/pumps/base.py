@@ -10,6 +10,7 @@ from uuid import uuid4
 import wx
 import wx.lib.scrolledpanel
 import wx.propgrid as wxpg
+import wx.lib.agw.hyperlink as hl
 
 from qcpump.pumps import dependencies
 from qcpump.logs import get_log_level
@@ -114,7 +115,6 @@ PROPERTY_VALIDATORS = {
     INT: MaxMinValidator,
     UINT: MaxMinValidator,
     FLOAT: MaxMinValidator,
-    DIRECTORY: DirValidator,
 }
 
 
@@ -196,6 +196,8 @@ class BasePump(wx.Panel):
         },
     }
     """
+
+    HELP_URL = "https://qcpump.readthedocs.org"
 
     # All pumps have some common options which are defined by the BASE_CONFIG
     BASE_CONFIG = [
@@ -458,6 +460,9 @@ class BasePump(wx.Panel):
         self.control_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.control_sizer.Add((0, 0), 1, wx.EXPAND, 5)
 
+        hyper = hl.HyperLinkCtrl(self, -1, "Help Documentation", URL=self.HELP_URL)
+        self.control_sizer.Add(hyper, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
         self.delete = wx.Button(self, wx.ID_ANY, "Delete", wx.DefaultPosition, wx.DefaultSize, 0)
         self.delete.SetToolTip("Click to remove this Pump")
         self.delete.Bind(wx.EVT_BUTTON, self.OnDelete)
@@ -491,6 +496,7 @@ class BasePump(wx.Panel):
         self.grids_panel.Layout()
         self.grids_sizer.Fit(self.grids_panel)
         self.main_sizer.Add(self.grids_panel, 1, wx.EXPAND | wx.ALL, 5)
+
         self.Layout()
 
     def create_grids(self):
@@ -513,7 +519,12 @@ class BasePump(wx.Panel):
 
             # if we will have multiple subsections then we need a toolbar for
             # adding/removing subsections
-            grid_style = wxpg.PG_SPLITTER_AUTO_CENTER
+            grid_style = (
+                wxpg.PG_SPLITTER_AUTO_CENTER |
+                wxpg.PG_NO_INTERNAL_BORDER |
+                wxpg.PG_HIDE_MARGIN |
+                wxpg.PG_TOOLTIPS
+            )
 
             grid = wxpg.PropertyGridManager(sb, style=grid_style, size=(-1, -1))
             grid.SetValidationFailureBehavior(
@@ -761,7 +772,7 @@ class BasePump(wx.Panel):
         new_value = evt.GetPropertyValue()
         validator = prop.GetValidator()
 
-        if validator and not validator.ValidateValue(new_value):
+        if validator and hasattr(validator, "ValidateValue") and not validator.ValidateValue(new_value):
             evt.Veto()
         else:
             evt.Skip()

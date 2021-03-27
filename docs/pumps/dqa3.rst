@@ -215,10 +215,14 @@ Verify SSL
     QATrack+ instance is using a self signed certificate)
 
 Http Proxy
-    Proxy authentication url e.g. http://10.10.1.10:3128 or socks5://user:pass@host:port
+    QCPump will try to autodetect your current proxy settings. However if you
+    want to manually provide a proxy url you may do so. Proxy authentication
+    url e.g. http://10.10.1.10:3128 or socks5://user:pass@host:port
 
 Https Proxy
-    Proxy authentication url e.g. https://10.10.1.10:3128 or socks5://user:pass@host:port
+    QCPump will try to autodetect your current proxy settings. However if you
+    want to manually provide a proxy url you may do so.Proxy authentication url
+    e.g. https://10.10.1.10:3128 or socks5://user:pass@host:port
 
 Test List (depends on QATrack+ API)
 ...................................
