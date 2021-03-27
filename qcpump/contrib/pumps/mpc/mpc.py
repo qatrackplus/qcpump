@@ -49,6 +49,7 @@ def group_by_meta(metas, window_minutes):
         grouped_by_templates = group_by_template(sn_group)
         grouped[sn] = {}
         for template, templ_group in grouped_by_templates.items():
+            window_minutes = window_minutes if do_timewindow_grouping(template) else 0
             grouped_by_dates = group_by_dates(templ_group, window_minutes)
             grouped[sn][template] = grouped_by_dates
 
@@ -69,6 +70,11 @@ def group_by_template(metas):
     for meta in metas:
         grouped[template_group(meta['path'])].append(meta)
     return grouped
+
+
+def do_timewindow_grouping(template):
+    """Only non enhanced checks get grouped together"""
+    return template == BEAM_AND_GEOMETRY_CHECKS
 
 
 def template_group(path):
@@ -136,7 +142,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
                     'label': 'Results group time interval (min)',
                     'type': INT,
                     'required': True,
-                    'default': 10,
+                    'default': 20,
                     'help': "Enter the time interval (in minutes) for which results should be grouped together.",
                 },
                 {
@@ -144,7 +150,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
                     'label': 'Wait for results (min)',
                     'type': INT,
                     'required': True,
-                    'default': 10,
+                    'default': 20,
                     'help': (
                         "Wait this many minutes for more results to be "
                         "written to disk before uploading grouped results"
@@ -165,7 +171,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
                     'required': True,
                     'help': "Enter a template for the name of the Test List you want to upload data to.",
                     'default': (
-                        "MPC: {{ template }}"
+                        "MPC: {{ check_type }}"
                     )
                 },
             ]
@@ -187,6 +193,10 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
         ("[°]", "deg"),
         ("[%]", "per")
     ]
+
+    @property
+    def autoskip(self):
+        return True
 
     def validate_mpc(self, values):
         """Ensure that both source and destination directories are set."""
@@ -270,6 +280,10 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
         template = jinja2.Template(tl_name_template, undefined=jinja2.StrictUndefined)
         return template.render({'check_type': template_type})
 
+    def comment_for_record(self, record):
+        sn, template_type, date, metas = record
+        return "Fileset:\n\t%s" % ('\n\t'.join(str(m['path']) for m in metas))
+
     def qatrack_unit_for_record(self, record):
         """Get unit serial number from record and return qatrack unit name for that unit"""
 
@@ -294,7 +308,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
         for meta in metas:
 
-            beam_type = f"_{meta['energy']}{meta['beam_type']}"
+            beam_type = f"{meta['energy']}{meta['beam_type']}"
 
             for row in self.csv_values(meta['path'].open('r')):
                 if not self.include_test(row[0]):

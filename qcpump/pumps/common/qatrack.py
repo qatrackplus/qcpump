@@ -13,6 +13,9 @@ settings = Settings()
 
 HTTP_CREATED = requests.codes['created']
 HTTP_OK = requests.codes['ok']
+HTTP_BAD_REQUEST = requests.codes['bad_request']
+
+MISSING_TEST_DATA_ERR = 'missing data for tests'.lower()
 
 
 class QATrackAPIMixin:
@@ -76,6 +79,10 @@ class QATrackAPIMixin:
             },
         ],
     }
+
+    @property
+    def autoskip(self):
+        return True
 
     def validate_api_url(self, url):
         if not (url.endswith("api") or url.endswith("api/")):
@@ -267,10 +274,9 @@ class QATrackFetchAndPost(QATrackAPIMixin):
     def _generate_payload(self, record):
         """Convert record to json payload suitable for posting to QATrack+ to perform a test list"""
 
-        test_values_from_record = self.test_values_from_record(record)
         utc_url = self._utc_url_for_record(record)
         if not utc_url:
-            unit_name = self.qatrack_unit_for_record(record)
+            unit_name = self.qatrack_unit_for_record(record) or "(Unknown Unit)"
             tl_name = self.test_list_for_record(record)
             record_id = self.id_for_record(record)
             self.log_error(
@@ -282,11 +288,13 @@ class QATrackFetchAndPost(QATrackAPIMixin):
         work_started, work_completed = self.work_datetimes_for_record(record)
         comment = self.comment_for_record(record)
         day = self.cycle_day_for_record(record)
+        test_values_from_record = self.test_values_from_record(record)
 
         payload = {
             'unit_test_collection': utc_url,
             'work_started': work_started,
             'work_completed': work_completed,
+            'user_key': self.id_for_record(record),
             'day': day,
             'tests': test_values_from_record,
         }
@@ -355,7 +363,29 @@ class QATrackFetchAndPost(QATrackAPIMixin):
         tli_url = self.construct_api_url("qa/testlistinstances")
         try:
             data = json.dumps(payload, cls=QCPumpJSONEncoder)
-            return session.post(tli_url, data=data)
+            res = session.post(tli_url, data=data)
+            do_autoskip = (
+                self.autoskip and
+                res.status_code == HTTP_BAD_REQUEST and
+                any(MISSING_TEST_DATA_ERR in err.lower() for err in res.json()['non_field_errors'])
+            )
+            if do_autoskip:
+                for err in res.json()['non_field_errors']:
+                    if MISSING_TEST_DATA_ERR not in err.lower():
+                        continue
+                    missing_tests = [t.strip() for t in err.split(":")[-1].split(",")]
+                    break
+                self.log_warning(f"Autoskipping {', '.join(missing_tests)}")
+                for t in missing_tests:
+                    try:
+                        payload['tests'][t]['skipped'] = True
+                    except KeyError:
+                        payload['tests'][t] = {'value': None, 'skipped': True}
+
+                data = json.dumps(payload, cls=QCPumpJSONEncoder)
+                res = session.post(tli_url, data=data)
+
+            return res
         except Exception as e:
             self.log_critical(f"Posting data to QATrack+ API failed: {e}")
 

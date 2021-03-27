@@ -96,6 +96,7 @@ def test_group_by_metas():
 
     dir_names = [
         "NDS-WKS-SN5678-2020-06-25-07-11-30-0000-GeometryCheckTemplate6xMVkVEnhancedCouch",
+        "NDS-WKS-SN5678-2020-06-25-07-12-30-0000-GeometryCheckTemplate6xMVkVEnhancedCouch",
         "NDS-WKS-SN6789-2020-09-30-09-15-17-0011-EnhancedMLCCheckTemplate6x",
         "NDS-WKS-SN1234-2020-09-30-09-15-17-0011-EnhancedMLCCheckTemplate6x",
         "NDS-WKS-SN1234-2020-10-01-11-26-55-0010-GeometryCheckTemplate6xMVkVEnhancedCouch",
@@ -120,6 +121,9 @@ def test_group_by_metas():
             mpc.ENH_COUCH_CHECKS: {
                 "2020-06-25-07-11": [
                     "NDS-WKS-SN5678-2020-06-25-07-11-30-0000-GeometryCheckTemplate6xMVkVEnhancedCouch"
+                ],
+                "2020-06-25-07-12": [
+                    "NDS-WKS-SN5678-2020-06-25-07-12-30-0000-GeometryCheckTemplate6xMVkVEnhancedCouch"
                 ],
             },
         },
