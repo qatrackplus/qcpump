@@ -10,3 +10,4 @@ PyPAC==0.15.0
 requests[socks]==2.25.1
 toposort==1.6
 wxPython==4.1.1
+-r docs.txt
