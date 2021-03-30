@@ -442,15 +442,15 @@ class TestQATrackMPCPump:
                 self.pump.qatrack_unit_for_record(("1234", "", "", [])) is None
 
     def test_values_from_record(self):
-        rows = io.StringIO("""Name [Unit]	 Value	 Threshold	 Evaluation Result
-CollimationGroup/MLCGroup/MLCMaxOffsetA [mm]	0.4	1	 Pass
-CollimationGroup/MLCGroup/MLCMaxOffsetB [mm]	0.43	1	 Pass
-CollimationGroup/MLCGroup/MLCMeanOffsetA [mm]	0.3	1	 Pass
-CollimationGroup/MLCGroup/MLCMeanOffsetB [mm]	0.27	1	 Pass
-CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf1 [mm]	0.27	1	 Pass
-CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf2 [mm]	0.34	1	 Pass
-CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf3 [mm]	0.3	1	 Pass
-CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm]	0.23	1	 Pass
+        rows = io.StringIO("""Name [Unit],Value,Threshold,Evaluation Result
+CollimationGroup/MLCGroup/MLCMaxOffsetA [mm],0.4,1,Pass
+CollimationGroup/MLCGroup/MLCMaxOffsetB [mm],0.43,1,Pass
+CollimationGroup/MLCGroup/MLCMeanOffsetA [mm],0.3,1,Pass
+CollimationGroup/MLCGroup/MLCMeanOffsetB [mm],0.27,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf1 [mm],0.27,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf2 [mm],0.34,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf3 [mm],0.3,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm],0.23,1,Pass
 """)
         path_mock = mock.MagicMock()
         path_mock.open.return_value = rows
@@ -464,19 +464,19 @@ CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm]	0.23	1	 Pass
 
         res = self.pump.test_values_from_record(record)
         expected = {
-            'collimationgroup_mlcgroup_mlcmaxoffseta_mm__6x': {
+            'collimationgroup_mlcgroup_mlcmaxoffseta_mm_6x': {
                 'value': 0.4,
                 'comment': 'Threshold: 1.000,Result: Pass',
             },
-            'collimationgroup_mlcgroup_mlcmaxoffsetb_mm__6x': {
+            'collimationgroup_mlcgroup_mlcmaxoffsetb_mm_6x': {
                 'value': 0.43,
                 'comment': 'Threshold: 1.000,Result: Pass',
             },
-            'collimationgroup_mlcgroup_mlcmeanoffseta_mm__6x': {
+            'collimationgroup_mlcgroup_mlcmeanoffseta_mm_6x': {
                 'value': 0.3,
                 'comment': 'Threshold: 1.000,Result: Pass',
             },
-            'collimationgroup_mlcgroup_mlcmeanoffsetb_mm__6x': {
+            'collimationgroup_mlcgroup_mlcmeanoffsetb_mm_6x': {
                 'value': 0.27,
                 'comment': 'Threshold: 1.000,Result: Pass',
             },
@@ -496,3 +496,10 @@ CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm]	0.23	1	 Pass
             }
         }
         assert self.pump.fetch_records() == []
+
+    def test_comment_for_record(self):
+        res = self.pump.comment_for_record(("123", "", "", [{'path': r"I:\Foo\Bar"}]))
+        assert res == "Fileset:\n\tI:\\Foo\\Bar"
+
+    def test_autoskip(self):
+        assert self.pump.autoskip
