@@ -283,38 +283,76 @@ History Days
     fetched.
 
 
-.. note::
+Creating a Read-Only User for QCPump
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    If you want to create a read only user to access your Firebird database
-    you can do so as follows:
+While it is not required, you may wish to create a read only user for QCPump
+to connect to your database with.  You may either use the Firebird tools
+`gsec` and `isql` to create the user or a third party tool like
+`FlameRobin <http://flamerobin.org/>`_ which is a great option for
+managing users and databases.
 
-    #. Create a file call create_ro_user.sql with the following contents,
-       replacing the file path, user, and password to match the database
-       location and authentication information for your database:
+**Using gsec to create a new user**
 
-        .. code:: sql
+On the server where your Firebird database is located, open a CMD prompt and
+enter the following command to create a user with the username `qcpump` and
+password `qcpump`:
 
-            CONNECT "C:\Path\To\Your\Database\Sncdata.fdb" user "sysdba" password "masterkey";
-            CREATE USER qcpump PASSWORD 'qcpump';
-            GRANT SELECT ON atlas_master to USER qcpump;
-            GRANT SELECT ON dqa3_machine to USER qcpump;
-            GRANT SELECT ON dqa3_trend to USER qcpump;
-            GRANT SELECT ON dqa3_data to USER qcpump;
-            GRANT SELECT ON device to USER qcpump;
-            GRANT SELECT ON dqa3_calibration to USER qcpump;
-            GRANT SELECT ON dqa3_template to USER qcpump;
-            GRANT SELECT ON dqa3_machine to USER qcpump;
+.. code:: bash
 
-    #. Open a Powershell or CMD prompt and enter the following command,
-       replacing the `C:\\Path\\To\\create_ro_role.sql` with the actual
-       file location where you saved the file:
+    # for firebird 1.5
+    C:\Program Files (x86)\Firebird\Firebird_1_5\bin\gsec.exe" -user sysdba -password masterkey -database "localhost:C:\Program Files (x86)\Firebird\Firebird_1_5\security.fdb
+    
+    # for firebird 2.5
+    C:\Program Files (x86)\Firebird\Firebird_2_5\bin\gsec.exe" -user sysdba -password masterkey -database "localhost:C:\Program Files (x86)\Firebird\Firebird_1_5\security2.fdb
 
-        .. code:: console
 
-            isql.exe -i C:\Path\To\create_ro_role.sql
+    GSEC> add qcpump -pw qcpump
+    GSEC> q
 
-    #. You should now be able to use the username `qcpump` and password
-       `qcpump` for the `User` and `Password` settings described above.
+
+Next you can grant your user select rights using isql.  Open isql specifying
+your username and password on the command line:
+
+.. code:: bash
+
+    # for firebird 1.5
+    "C:\Program Files (x86)\Firebird\Firebird_1_5\bin\isql.exe" -user sysdba -password masterkey
+
+    # for firebird 2.5
+    "C:\Program Files (x86)\Firebird\Firebird_2_5\bin\isql.exe" -user sysdba -password masterkey
+
+
+and connect to your database:
+
+.. code:: bash
+
+    CONNECT "localhost:C:\Path\To\Your\Database\Sncdata.fdb";
+
+(*note, you may need to replace `localhost` with your actual server host name*)
+then grant your user select rights on the tables required:
+
+    .. code:: sql
+
+        GRANT SELECT ON atlas_master to USER qcpump;
+        GRANT SELECT ON dqa3_machine to USER qcpump;
+        GRANT SELECT ON dqa3_trend to USER qcpump;
+        GRANT SELECT ON dqa3_data to USER qcpump;
+        GRANT SELECT ON device to USER qcpump;
+        GRANT SELECT ON dqa3_calibration to USER qcpump;
+        GRANT SELECT ON dqa3_template to USER qcpump;
+        GRANT SELECT ON dqa3_machine to USER qcpump;
+        quit;
+
+
+.. figure:: images/dqa3/grant-select-1.5.png
+    :alt: Grant qcpump user rights
+
+    Grant qcpump user rights
+
+
+You should now be able to use the username `qcpump` and password `qcpump` for
+the `User` and `Password` settings described above.
 
 
 
