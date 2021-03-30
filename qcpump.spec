@@ -17,6 +17,7 @@ hidden_imports = [
     # core
     "qcpump.core.db",
     "qcpump.core.json",
+    "qcpump.pumps.common.qatrack",
 
     # third party
     "jinja2",

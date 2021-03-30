@@ -34,7 +34,9 @@ QCPump repository:
     git clone https://github.com/qatrackplus/qcpump.git
 
 
-then create a new venv to install the QCPump requirements:
+If you are on Windows, visit https://www.lfd.uci.edu/~gohlke/pythonlibs/ and
+download DukPy for your particular version of Python.  Now create a new venv to
+install the QCPump requirements:
 
 .. code:: bash
 
@@ -45,6 +47,7 @@ then create a new venv to install the QCPump requirements:
 
     # activate venv on Windows and install requirements
     env\Scripts\Activate.ps1
+    pip install C:\path\to\dukpy-0.2.3-cp39-cp39-win_amd64.whl
     pip install -r requirements\base.txt
 
     # activate venv on *nix
