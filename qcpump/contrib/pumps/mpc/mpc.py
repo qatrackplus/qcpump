@@ -272,7 +272,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
     def id_for_record(self, record):
         sn, template_type, date, metas = record
-        return "%s-%s" % (sn, date)
+        return "%s-%s-%s" % (sn, date, template_type)
 
     def test_list_for_record(self, record):
         sn, template_type, date, metas = record
