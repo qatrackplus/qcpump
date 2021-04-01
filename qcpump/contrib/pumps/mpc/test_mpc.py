@@ -416,7 +416,7 @@ class TestQATrackMPCPump:
 
     def test_id_for_record(self):
         record = ("5678", mpc.BEAM_AND_GEOMETRY_CHECKS, "2020-06-25-07-11", [])
-        assert self.pump.id_for_record(record) == "5678-2020-06-25-07-11"
+        assert self.pump.id_for_record(record) == f"QCPump/MPC/5678/2020-06-25-07-11/{mpc.BEAM_AND_GEOMETRY_CHECKS}"
 
     @pytest.mark.parametrize("record,expected", [
         (("5678", mpc.BEAM_AND_GEOMETRY_CHECKS, "2020-06-25-07-11", []), "MPC: Beam and Geometry Checks"),
@@ -503,3 +503,15 @@ CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm],0.23,1,Pass
 
     def test_autoskip(self):
         assert self.pump.autoskip
+
+    meta1 = {'date': dt(2020, 6, 25, 7, 11)}
+    meta2 = {'date': dt(2020, 6, 25, 7, 13)}
+    @pytest.mark.parametrize("metas,ws,wc", [  # noqa: E301
+        ([meta1, meta2], meta1['date'], meta2['date']),
+        ([meta2, meta1], meta1['date'], meta2['date']),
+        ([meta1, meta1], meta1['date'], meta1['date'] + timedelta(minutes=1)),
+    ])
+    def test_work_datetimes_for_record(self, metas, ws, wc):
+        record = ("5678", mpc.BEAM_AND_GEOMETRY_CHECKS, "2020-06-25-07-11", metas)
+        res = self.pump.work_datetimes_for_record(record)
+        assert res == (ws, wc)

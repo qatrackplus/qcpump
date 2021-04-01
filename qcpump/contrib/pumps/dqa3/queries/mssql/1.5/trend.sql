@@ -7,7 +7,10 @@ SELECT
     data.CollectedBy as signature,
     dev.SerialNumber as device,
     energy.EnergyValue as beamenergy,
-    energy.BeamType as beamtype,
+    CASE
+        WHEN energy.BeamTypeFlag=1 then 'FFF'
+        ELSE energy.BeamType
+    END as beamtype,
     data.temperature as temperature,
     data.pressure as pressure,
 

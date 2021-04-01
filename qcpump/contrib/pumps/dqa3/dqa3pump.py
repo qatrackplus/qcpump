@@ -1,3 +1,4 @@
+from collections import defaultdict
 import datetime
 
 import jinja2
@@ -11,7 +12,7 @@ from qcpump.settings import Settings
 HTTP_CREATED = requests.codes['created']
 HTTP_OK = requests.codes['ok']
 
-UNKNOWN = object()
+DATE_GROUP_FMT = "%Y-%m-%d-%H-%M"
 
 db_queriers = {
     'fdb': fdb_query,
@@ -20,6 +21,16 @@ db_queriers = {
 }
 
 settings = Settings()
+
+
+QUERY_META = [
+    'work_started',
+    'work_completed',
+    'comment',
+    'dqa3_unit_name',
+    'beamenergy',
+    'beamtype',
+]
 
 
 class BaseDQA3:
@@ -179,7 +190,7 @@ class BaseDQA3:
 
     def id_for_record(self, record):
         record['data_key'] = str(record['data_key'])
-        return f"QCPump::DQA3::{record['data_key']}"
+        return f"QCPump/DQA3/{record['dqa3_unit_name']}/{record['work_started']}/{record['data_key']}"
 
     @property
     def unit_map(self):
@@ -192,15 +203,7 @@ class BaseDQA3:
         return record['work_started'], record['work_completed']
 
     def test_values_from_record(self, record):
-        meta = [
-            'work_completed',
-            'work_started',
-            'comment',
-            'dqa3_unit_name',
-            'beamenergy',
-            'beamtype',
-        ]
-        return {k.lower(): {'value': v} for k, v in record.items() if k not in meta}
+        return {k.lower(): {'value': v} for k, v in record.items() if k not in QUERY_META}
 
     def comment_for_record(self, record):
         return record.get('comment') or ""
@@ -216,7 +219,7 @@ class BaseDQA3:
     def fetch_records(self):
         try:
             query, params = self.prepare_dqa3_query()
-            rows = self.querier(self.db_connect_kwargs(), query, params=params, fetch_method="fetchall")
+            rows = self.querier(self.db_connect_kwargs(), query, params=params, fetch_method="fetchallmap")
         except Exception as e:
             rows = []
             self.log_critical(f"Failed to query {self.db_type} db in pump: {e}")
@@ -422,6 +425,345 @@ class AtlasDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
                     'required': False,
                     'default': 1,
                     'help': "Enter the number of days you want to import data for",
+                },
+            ],
+        },
+        QATrackFetchAndPost.QATRACK_API_CONFIG,
+        BaseDQA3.TEST_LIST_CONFIG,
+        BaseDQA3.UNIT_CONFIG,
+    ]
+
+
+def group_by_machine_dates(rows, window_minutes):
+    """Group input meta data records by serial number and date/time window"""
+    machine_groups = group_by_machine(rows)
+    grouped = {}
+    for machine, machine_group in machine_groups.items():
+        grouped[machine] = group_by_dates(machine_group, window_minutes)
+
+    return grouped
+
+
+def group_by_machine(rows):
+    """Group input records by machine names"""
+    grouped = defaultdict(list)
+    for row in rows:
+        grouped[row['dqa3_unit_name']].append(row)
+    return grouped
+
+
+def group_by_dates(rows, window_minutes):
+    """Group input data records by date"""
+
+    sorted_by_date = list(sorted(rows, key=lambda m: m['work_started']))
+
+    cur_date = sorted_by_date[0]['work_started']
+    cur_window = cur_date + datetime.timedelta(minutes=window_minutes)
+    cur_window_key = cur_date.strftime(DATE_GROUP_FMT)
+
+    grouped = defaultdict(list)
+    for row in sorted_by_date:
+        cur_date = row['work_started']
+        if cur_date > cur_window:
+            cur_window = cur_date + datetime.timedelta(minutes=window_minutes)
+            cur_window_key = cur_date.strftime(DATE_GROUP_FMT)
+        grouped[cur_window_key].append(row)
+
+    return grouped
+
+
+class BaseGroupedDQA3(BaseDQA3):
+
+    def validate_test_list(self, values):
+        name = values['name'].strip()
+        if not name:
+            return False, "You must set a test list name"
+        return True, "OK"
+
+    def fetch_records(self):
+        records = super().fetch_records()
+        grouped = self.group_records(records)
+        filtered = self.filter_records(grouped)
+        return filtered
+
+    def group_records(self, rows):
+        minutes = self.get_config_value('DQA3Reader', 'grouping window')
+        results_groups = []
+        for machine, date_groups in group_by_machine_dates(rows, minutes).items():
+            for date_group, grouped in date_groups.items():
+                results_groups.append((machine, date_group, grouped))
+        return results_groups
+
+    def filter_records(self, records):
+        """Remove any groups which are not older than N minutes. This allows us
+        to wait until all beam results are written to disk before uploading"""
+
+        now = datetime.datetime.now()
+        cutoff_delta = datetime.timedelta(minutes=self.get_config_value("DQA3Reader", "wait time"))
+        filtered = []
+        for record in records:
+            machine, date, rows = record
+            max_date = sorted(rows, key=lambda m: m['work_started'], reverse=True)[0]['work_started']
+            cutoff = max_date + cutoff_delta
+            if cutoff <= now:
+                filtered.append(record)
+
+        return filtered
+
+    def id_for_record(self, record):
+        machine, date, rows = record
+        data_keys = '/'.join(str(r['data_key']) for r in rows)
+        return f"QCPump/DQA3/{machine}/{date}/{data_keys}"[:255]
+
+    def test_values_from_record(self, record):
+        """Convert all values from the csv files in record to test value
+        dictionaries suitable for uploading to QATrack+"""
+
+        sn, date, rows = record
+
+        # ensure records are sorted by work_started so any duplicate beams get the value
+        # of the last acquired beam
+        rows = sorted(rows, key=lambda r: r['work_started'])
+
+        test_vals = {}
+        for row in rows:
+
+            energy, beam_type = self.energy_and_beam_type_for_row(row)
+
+            for k, v in row.items():
+                if k in QUERY_META:
+                    continue
+
+                slug = f'{k}_{energy}{beam_type}'.lower()
+                test_vals[slug] = {'value': v}
+
+        return test_vals
+
+    def qatrack_unit_for_record(self, record):
+        return self.unit_map[record[0]]
+
+    def work_datetimes_for_record(self, record):
+        machine, date, rows = record
+        rows = list(sorted(rows, key=lambda r: r['work_started']))
+        min_date = rows[0]['work_started']
+        max_date = max(rows[-1]['work_started'], min_date + datetime.timedelta(minutes=1))
+        return min_date, max_date
+
+    def comment_for_record(self, record):
+        return record.get('comment') or ""
+
+    def test_list_for_record(self, record):
+        tl_name_template = self.get_config_value("Test List", "name")
+        return tl_name_template
+
+
+class FirebirdGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
+
+    query_parameter = "?"
+    db_type = "fdb"
+
+    db_kwargs_to_connect_kwargs = {
+        'fdb': {
+            'driver': None,
+        },
+        'firebirdsql': {
+            'driver': None,
+        },
+    }
+
+    CONFIG = [
+        {
+            'name': 'DQA3Reader',
+            'multiple': False,
+            'validation': 'validate_dqa3reader',
+            'fields': [
+                {
+                    'name': 'host',
+                    'type': STRING,
+                    'required': True,
+                    'help': "Enter the host name of the database server you want to connect to",
+                    'default': 'localhost'
+                },
+                {
+                    'name': 'database',
+                    'label': "Database File Path",
+                    'type': STRING,
+                    'required': True,
+                    'help': (
+                        "Enter the path to the database file you want to connect to on the server."
+                        r" For example C:\Users\YourUserName\databases\Sncdata.fdb"
+                    ),
+                },
+                {
+                    'name': 'user',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'sysdba',
+                    'help': "Enter the username you want to use to connect to the database with",
+                },
+                {
+                    'name': 'password',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'masterkey',
+                    'help': "Enter the password you want to use to connect to the database with",
+                },
+                {
+                    'name': 'port',
+                    'type': INT,
+                    'required': False,
+                    'default': 3050,
+                    'help': "Enter the port number that the Firebird Database server is listening on",
+                    'validation': {
+                        'min': 0,
+                        'max': 2**16 - 1,
+                    }
+                },
+                {
+                    'name': 'driver',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select the database driver you want to use",
+                    'default': 'firebirdsql',
+                    'choices': ['firebirdsql', 'fdb'],
+                },
+                {
+                    'name': 'history days',
+                    'label': 'Days of history',
+                    'type': INT,
+                    'required': False,
+                    'default': 1,
+                    'help': "Enter the number of prior days you want to look for data to import",
+                },
+                {
+                    'name': 'grouping window',
+                    'label': 'Results group time interval (min)',
+                    'type': INT,
+                    'required': True,
+                    'default': 20,
+                    'help': "Enter the time interval (in minutes) for which results should be grouped together.",
+                },
+                {
+                    'name': 'wait time',
+                    'label': 'Wait for results (min)',
+                    'type': INT,
+                    'required': True,
+                    'default': 20,
+                    'help': (
+                        "Wait this many minutes for more results to be "
+                        "written to disk before uploading grouped results"
+                    ),
+                },
+            ],
+        },
+        QATrackFetchAndPost.QATRACK_API_CONFIG,
+        BaseDQA3.TEST_LIST_CONFIG,
+        BaseDQA3.UNIT_CONFIG,
+    ]
+
+
+class AtlasGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
+
+    query_parameter = "?"
+    db_type = "mssql"
+
+    db_kwargs_to_connect_kwargs = {
+        'py-tds': {
+            'host': 'dsn',
+        },
+        'FreeTDS': {
+            'host': 'server',
+        },
+        'ODBC Driver 17 for SQL Server': {
+            'host': 'server',
+        },
+        'SQL Server Native Client 11.0': {
+            'host': 'server',
+        },
+    }
+
+    CONFIG = [
+        {
+            'name': 'DQA3Reader',
+            'multiple': False,
+            'validation': 'validate_dqa3reader',
+            'fields': [
+                {
+                    'name': 'host',
+                    'type': STRING,
+                    'required': True,
+                    'help': "Enter the host name of the database server you want to connect to",
+                    'default': 'localhost'
+                },
+                {
+                    'name': 'database',
+                    'label': "Database Name",
+                    'type': STRING,
+                    'required': True,
+                    'help': (
+                        "Enter the name of the database you want to connect to on the server."
+                        r" For example 'atlas'"
+                    ),
+                },
+                {
+                    'name': 'user',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'sa',
+                    'help': "Enter the username you want to use to connect to the database with",
+                },
+                {
+                    'name': 'password',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'Password123',
+                    'help': "Enter the password you want to use to connect to the database with",
+                },
+                {
+                    'name': 'port',
+                    'type': INT,
+                    'required': False,
+                    'default': 1433,
+                    'help': "Enter the port number that the Firebird Database server is listening on",
+                    'validation': {
+                        'min': 0,
+                        'max': 2**16 - 1,
+                    }
+                },
+                {
+                    'name': 'driver',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select database driver you want to use",
+                    'default': 'ODBC Driver 17 for SQL Server',
+                    'choices': ['ODBC Driver 17 for SQL Server', 'py-tds', 'FreeTDS', 'SQL Server Native Client 11.0'],
+                },
+                {
+                    'name': 'history days',
+                    'label': 'Days of history',
+                    'type': INT,
+                    'required': False,
+                    'default': 1,
+                    'help': "Enter the number of days you want to import data for",
+                },
+                {
+                    'name': 'grouping window',
+                    'label': 'Results group time interval (min)',
+                    'type': INT,
+                    'required': True,
+                    'default': 20,
+                    'help': "Enter the time interval (in minutes) for which results should be grouped together.",
+                },
+                {
+                    'name': 'wait time',
+                    'label': 'Wait for results (min)',
+                    'type': INT,
+                    'required': True,
+                    'default': 20,
+                    'help': (
+                        "Wait this many minutes for more results to be "
+                        "written to disk before uploading grouped results"
+                    ),
                 },
             ],
         },

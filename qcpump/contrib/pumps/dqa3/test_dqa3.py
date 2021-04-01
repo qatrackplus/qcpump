@@ -147,7 +147,9 @@ class TestDQA3:
 
     def test_id_for_record(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
-        assert pump.id_for_record({'data_key': 'foo'}) == "QCPump::DQA3::foo"
+        dt = datetime.datetime(2021, 3, 31, 1, 23, 34)
+        rec = {'data_key': 'foo', 'dqa3_unit_name': 'unit', 'work_started': dt}
+        assert pump.id_for_record(rec) == "QCPump/DQA3/unit/2021-03-31 01:23:34/foo"
 
     def test_qatrack_unit_for_record(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
@@ -239,3 +241,106 @@ class TestDQA3:
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         with mock.patch.object(pump, "get_config_value", return_value="DQA3: {{energy}}{{beam_type}}"):
             assert pump.test_list_for_record(record) == expected
+
+
+class TestDQA3Grouped:
+
+    def setup_class(self):
+        self.app = wx.App()
+
+    def get_pump(self, klass):
+        pump = klass()
+        pump.log = mock.Mock()
+        return pump
+
+    def test_group_by_machine_date(self):
+        dt1 = datetime.datetime(2021, 3, 31, 1, 23, 34)
+        dt2 = dt1 + datetime.timedelta(minutes=1)
+        dt3 = dt2 + datetime.timedelta(minutes=1)
+        dt4 = dt3 + datetime.timedelta(minutes=10)
+        dt5 = dt4 + datetime.timedelta(minutes=1)
+
+        rows = [
+            {'data_key': 1, 'dqa3_unit_name': 'unit1', 'work_started': dt1},
+            {'data_key': 2, 'dqa3_unit_name': 'unit2', 'work_started': dt1},
+            {'data_key': 3, 'dqa3_unit_name': 'unit1', 'work_started': dt2},
+            {'data_key': 4, 'dqa3_unit_name': 'unit2', 'work_started': dt2},
+            {'data_key': 5, 'dqa3_unit_name': 'unit1', 'work_started': dt3},
+            {'data_key': 6, 'dqa3_unit_name': 'unit2', 'work_started': dt3},
+
+            {'data_key': 7, 'dqa3_unit_name': 'unit1', 'work_started': dt4},
+            {'data_key': 8, 'dqa3_unit_name': 'unit2', 'work_started': dt4},
+            {'data_key': 9, 'dqa3_unit_name': 'unit1', 'work_started': dt5},
+            {'data_key': 0, 'dqa3_unit_name': 'unit2', 'work_started': dt5},
+        ]
+
+        res = dqa3pump.group_by_machine_dates(rows, 3)
+
+        expected = {
+            "unit1": {
+                "2021-03-31-01-23": [
+                    {"data_key": 1, "dqa3_unit_name": "unit1", "work_started": dt1},
+                    {"data_key": 3, "dqa3_unit_name": "unit1", "work_started": dt2},
+                    {"data_key": 5, "dqa3_unit_name": "unit1", "work_started": dt3}
+                ],
+                "2021-03-31-01-35": [
+                    {"data_key": 7, "dqa3_unit_name": "unit1", "work_started": dt4},
+                    {"data_key": 9, "dqa3_unit_name": "unit1", "work_started": dt5}
+                ]
+            },
+            "unit2": {
+                "2021-03-31-01-23": [
+                    {"data_key": 2, "dqa3_unit_name": "unit2", "work_started": dt1},
+                    {"data_key": 4, "dqa3_unit_name": "unit2", "work_started": dt2},
+                    {"data_key": 6, "dqa3_unit_name": "unit2", "work_started": dt3}
+                ],
+                "2021-03-31-01-35": [
+                    {"data_key": 8, "dqa3_unit_name": "unit2", "work_started": dt4},
+                    {"data_key": 0, "dqa3_unit_name": "unit2", "work_started": dt5}
+                ]
+            }
+        }
+        assert res == expected
+
+    @pytest.mark.parametrize("name,valid_expected,msg_expected", [
+        ("", False, "You must set a test list name"),
+        ("DQA3 Results", True, "OK"),
+    ])
+    def test_validate_test_list(self, name, valid_expected, msg_expected):
+        pump = dqa3pump.BaseGroupedDQA3()
+        valid, msg = pump.validate_test_list({'name': name})
+        assert valid is valid_expected
+        assert msg_expected in msg
+
+    def test_fetch_records(self):
+        pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
+
+        pump.state = {
+            "DQA3Reader": {
+                'subsections': [[
+                    {'config_name': 'history days', 'value': 1},
+                    {'config_name': 'wait time', 'value': 1},
+                    {'config_name': 'grouping window', 'value': 1},
+                ]],
+            }
+        }
+        dt1 = datetime.datetime(2021, 3, 31, 1, 23, 34)
+        fetch_results = [{'data_key': 1, 'dqa3_unit_name': 'unit1', 'work_started': dt1}]
+        results = [
+            ('unit1', '2021-03-31-01-23', fetch_results),
+        ]
+        with mock.patch.object(pump, "prepare_dqa3_query", return_value=["", []]):
+            with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.querier", return_value=fetch_results):
+                with mock.patch.object(pump, "db_connect_kwargs"):
+                    records = pump.fetch_records()
+                    assert records == results
+
+    def test_id_for_record(self):
+        pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
+        dt1 = datetime.datetime(2021, 3, 31, 1, 23, 34)
+        fetch_results = [
+            {'data_key': 123, 'dqa3_unit_name': 'unit1', 'work_started': dt1},
+            {'data_key': 456, 'dqa3_unit_name': 'unit1', 'work_started': dt1},
+        ]
+        rec = ('unit1', '2021-03-31-01-23', fetch_results)
+        assert pump.id_for_record(rec) == "QCPump/DQA3/unit1/2021-03-31-01-23/123/456"

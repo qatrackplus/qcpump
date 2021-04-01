@@ -80,7 +80,12 @@ class QCPumpUI(ui.VQCPumpUI):
             except Exception as e:
                 self.non_fatal_error(f"Failed to load pump config from {path}", e)
 
+        pump_types = get_pump_types()
         for name, save_data in sorted(pumps_to_load):
+            if save_data['type'] not in pump_types:
+                self.non_fatal_error(f"Failed to initialize pump config from {path}")
+                continue
+
             try:
                 self.add_pump_page(save_data['type'], name, save_data['state'])
             except Exception as e:
@@ -177,7 +182,9 @@ class QCPumpUI(ui.VQCPumpUI):
         return True
 
     def remove_pump_page(self, name):
-        page = self.pump_windows.pop(name)
+        page = self.pump_windows.pop(name, None)
+        if not page:
+            return
         page_idx = self.pump_notebook.GetChildren().index(page)
         self.pump_notebook.DeletePage(page_idx)
         self.pump_notebook.SendSizeEvent()

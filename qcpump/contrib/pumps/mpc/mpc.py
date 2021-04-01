@@ -272,7 +272,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
     def id_for_record(self, record):
         sn, template_type, date, metas = record
-        return "%s-%s-%s" % (sn, date, template_type)
+        return "QCPump/MPC/%s/%s/%s" % (sn, date, template_type)
 
     def test_list_for_record(self, record):
         sn, template_type, date, metas = record
@@ -345,3 +345,10 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
     def test_value(self, test_val):
         return float(test_val.strip())
+
+    def work_datetimes_for_record(self, record):
+        sn, template_type, date, metas = record
+        metas = list(sorted(metas, key=lambda m: m['date']))
+        min_date = metas[0]['date']
+        max_date = max(metas[-1]['date'], min_date + datetime.timedelta(minutes=1))
+        return min_date, max_date
