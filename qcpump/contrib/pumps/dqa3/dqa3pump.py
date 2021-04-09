@@ -27,7 +27,7 @@ QUERY_META = [
     'work_started',
     'work_completed',
     'comment',
-    'dqa3_unit_name',
+    'machine_id',
     'beamenergy',
     'beamtype',
 ]
@@ -82,6 +82,7 @@ class BaseDQA3:
     def __init__(self, *args, **kwargs):
 
         self.db_version = None
+        self.dqa_machine_name_to_id = {}
         super().__init__(*args, **kwargs)
 
     @property
@@ -177,30 +178,40 @@ class BaseDQA3:
             self.log_debug("DB Version not set yet. Units can not be retrieved.")
             return []
 
+        self.dqa_machine_name_to_id = {}
         results = []
         connect_kwargs = self.db_connect_kwargs()
         try:
             uquery = (self.get_pump_path() / "queries" / self.db_type / self.db_version / "machines.sql").read_text()
-            results = list(sorted(x[0] for x in self.querier(connect_kwargs, uquery)))
+            q_results = self.querier(connect_kwargs, uquery, fetch_method="fetchallmap")
+            for row in q_results:
+                name = self.dqa3_machine_to_name(row)
+                self.dqa_machine_name_to_id[name] = row['machine_id']
+                results.append(name)
             self.log_debug(f"Found Units {', '.join(results)}")
         except Exception as e:
             self.log_error(f"Querying units resulted in an error: {e}")
 
         return results
 
+    def dqa3_machine_to_name(self, row):
+        name = f"{row['room_name']}/" if row['room_name'] else ""
+        name += f"{row['machine_name']}"
+        return name
+
     def id_for_record(self, record):
         record['data_key'] = str(record['data_key'])
-        return f"QCPump/DQA3/{record['dqa3_unit_name']}/{record['work_started']}/{record['data_key']}"
+        return f"QCPump/DQA3/{record['machine_id']}/{record['work_started']}/{record['data_key']}"
 
     @property
     def unit_map(self):
-        return {u['dqa3 name']: u['unit name'] for u in self.get_config_values("Unit")}
+        return {self.dqa_machine_name_to_id[u['dqa3 name']]: u['unit name'] for u in self.get_config_values("Unit")}
 
     def qatrack_unit_for_record(self, record):
-        return self.unit_map[record['dqa3_unit_name']]
+        return self.unit_map[record['machine_id']]
 
     def work_datetimes_for_record(self, record):
-        return record['work_started'], record['work_completed']
+        return record['work_started'], record['work_started'] + datetime.timedelta(minutes=1)
 
     def test_values_from_record(self, record):
         return {k.lower(): {'value': v} for k, v in record.items() if k not in QUERY_META}
@@ -229,7 +240,7 @@ class BaseDQA3:
     def prepare_dqa3_query(self):
 
         # create enough ? placeholders for configured units
-        units = ["%s" % dqa3_unit_name for dqa3_unit_name in self.unit_map.keys()]
+        units = list(self.unit_map.keys())
         unit_placeholders = ','.join(self.query_parameter for __ in units)
         q = self.dqa3_trend_query.format(units=unit_placeholders)
         return q, [self.min_date] + units
@@ -448,7 +459,7 @@ def group_by_machine(rows):
     """Group input records by machine names"""
     grouped = defaultdict(list)
     for row in rows:
-        grouped[row['dqa3_unit_name']].append(row)
+        grouped[row['machine_id']].append(row)
     return grouped
 
 
@@ -473,6 +484,22 @@ def group_by_dates(rows, window_minutes):
 
 
 class BaseGroupedDQA3(BaseDQA3):
+
+    TEST_LIST_CONFIG = {
+        'name': "Test List",
+        'multiple': False,
+        'dependencies': ["QATrack+ API"],
+        'validation': 'validate_test_list',
+        'fields': [
+            {
+                'name': 'name',
+                'type': STRING,
+                'required': True,
+                'help': "Enter a template for the name of the Test List you want to upload data to.",
+                'default': "Daily QA3 Results",
+            },
+        ]
+    }
 
     def validate_test_list(self, values):
         name = values['name'].strip()
@@ -511,15 +538,15 @@ class BaseGroupedDQA3(BaseDQA3):
         return filtered
 
     def id_for_record(self, record):
-        machine, date, rows = record
+        machine_id, date, rows = record
         data_keys = '/'.join(str(r['data_key']) for r in rows)
-        return f"QCPump/DQA3/{machine}/{date}/{data_keys}"[:255]
+        return f"QCPump/DQA3/{machine_id}/{date}/{data_keys}"[:255]
 
     def test_values_from_record(self, record):
         """Convert all values from the csv files in record to test value
         dictionaries suitable for uploading to QATrack+"""
 
-        sn, date, rows = record
+        machine_id, date, rows = record
 
         # ensure records are sorted by work_started so any duplicate beams get the value
         # of the last acquired beam
@@ -550,7 +577,8 @@ class BaseGroupedDQA3(BaseDQA3):
         return min_date, max_date
 
     def comment_for_record(self, record):
-        return record.get('comment') or ""
+        machine, date, rows = record
+        return ('\n'.join(r.get('comment', '') for r in rows)).strip()
 
     def test_list_for_record(self, record):
         tl_name_template = self.get_config_value("Test List", "name")
@@ -657,7 +685,7 @@ class FirebirdGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
             ],
         },
         QATrackFetchAndPost.QATRACK_API_CONFIG,
-        BaseDQA3.TEST_LIST_CONFIG,
+        BaseGroupedDQA3.TEST_LIST_CONFIG,
         BaseDQA3.UNIT_CONFIG,
     ]
 
@@ -768,6 +796,6 @@ class AtlasGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
             ],
         },
         QATrackFetchAndPost.QATRACK_API_CONFIG,
-        BaseDQA3.TEST_LIST_CONFIG,
+        BaseGroupedDQA3.TEST_LIST_CONFIG,
         BaseDQA3.UNIT_CONFIG,
     ]

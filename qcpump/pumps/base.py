@@ -785,19 +785,20 @@ class BasePump(wx.Panel):
 
         self.set_dirty(True)
 
-        grid = evt.GetEventObject()
+        self._OnGridChanged(evt.GetPropertyValue(), evt.GetEventObject(), evt.GetProperty())
+
+    def _OnGridChanged(self, value, grid, prop):
+
         grid_id = grid.GetId()
 
         # update the relevant state field
         config = self.grid_configs[grid_id]
-        prop = evt.GetProperty()
         prop_data = prop.GetClientData()
         subsection_idx = prop_data['subsection_idx']
         section = self.grid_configs[grid_id]['name']
         field_idx = prop_data['field_idx']
         field = config['fields'][field_idx]
 
-        value = evt.GetPropertyValue()
         if field['type'] == MULTCHOICE:
             # mult choice GetPropertyValue() returns an integer but we want string
             value = prop.GetValueAsString()
@@ -1173,6 +1174,7 @@ class BasePump(wx.Panel):
                     default = field_config.get('default', "")
                     val = new_choices.index(default) if default in new_choices else None
                     prop.SetValue(val)
+                    self._OnGridChanged(val, grid, prop)
 
     def get_config_values(self, section):
         """

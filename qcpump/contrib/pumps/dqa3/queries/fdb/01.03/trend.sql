@@ -3,7 +3,9 @@ SELECT
     tr.measured_datetime as work_completed,
     DATEADD(minute, -1 , tr.measured_datetime) as work_started,
     data.comments as comment,
-    mach.tree_name as dqa3_unit_name,
+    mach.mach_key as machine_id,
+    mach.tree_name as machine_name,
+    room.tree_name as room_name,
     data.signature as signature,
     dev.serial as device,
     template.beamenergy as beamenergy,
@@ -65,6 +67,8 @@ JOIN
     dqa3_template template on data.set_key = template.set_key
 JOIN
     dqa3_machine mach on template.mach_key = mach.mach_key
+JOIN
+    room room on room.ROOM_KEY = mach.ROOM_KEY
 WHERE
-    tr.measured_datetime >= ? AND mach.tree_name IN ({units})
+    tr.measured_datetime >= ? AND mach.mach_key IN ({units})
 ORDER BY tr.data_key asc;

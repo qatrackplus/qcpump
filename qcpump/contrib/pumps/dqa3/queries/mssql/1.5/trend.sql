@@ -1,9 +1,10 @@
 SELECT
     data.Dqa3DataId as data_key,
-    data.created as work_completed,
-    DATEADD(minute, -1 , data.created) as work_started,
+    data.created as work_started,
     data.AdditionalNotes as comment,
-    mach.MachineName as dqa3_unit_name,
+    mach.MachineName as machine_name,
+    mach.RoomNumber as room_name,
+    mach.MachineId as machine_id,
     data.CollectedBy as signature,
     dev.SerialNumber as device,
     energy.EnergyValue as beamenergy,
@@ -69,5 +70,5 @@ JOIN
 JOIN
 	Energy energy on template.EnergyId = energy.EnergyId
 WHERE
-    data.created >= ? AND mach.MachineName IN ({units})
+    data.created >= ? AND mach.MachineId IN ({units})
 ORDER BY data.created asc;

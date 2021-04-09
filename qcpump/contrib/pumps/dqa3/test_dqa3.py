@@ -7,6 +7,9 @@ import wx
 
 from qcpump.contrib.pumps.dqa3 import dqa3pump
 
+dt1 = datetime.datetime(2021, 3, 31, 1, 23)
+dt2 = datetime.datetime(2021, 3, 31, 1, 24)
+
 
 class TestDQA3:
 
@@ -125,19 +128,22 @@ class TestDQA3:
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         pump.db_version = "1.5"
 
-        with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.querier", return_value=[("Unit 2",), ("Unit 1",)]):
+        return_val = [
+            {'machine_id': 1, 'machine_name': 'Unit 1', 'room_name': "Room 1"},
+            {'machine_id': 2, 'machine_name': 'Unit 2', 'room_name': "Room 2"},
+            {'machine_id': 3, 'machine_name': 'Unit 3', 'room_name': None},
+        ]
+
+        with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.querier", return_value=return_val):
             with mock.patch.object(pump, "db_connect_kwargs"):
-                assert pump.get_dqa3_unit_choices() == ["Unit 1", "Unit 2"]
+                expected = ["Room 1/Unit 1", "Room 2/Unit 2", "Unit 3"]
+                assert pump.get_dqa3_unit_choices() == expected
 
     def test_get_dqa3_unit_choices_fail(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         pump.db_version = "1.5"
 
-        with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.querier", return_value=[("Unit 2",), ("Unit 1",)]):
-            with mock.patch.object(pump, "db_connect_kwargs"):
-                assert pump.get_dqa3_unit_choices() == ["Unit 1", "Unit 2"]
-
-        def fail(*args):
+        def fail(*args, **kwargs):
             raise Exception("some failure")
 
         with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.querier", side_effect=fail):
@@ -148,14 +154,15 @@ class TestDQA3:
     def test_id_for_record(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         dt = datetime.datetime(2021, 3, 31, 1, 23, 34)
-        rec = {'data_key': 'foo', 'dqa3_unit_name': 'unit', 'work_started': dt}
-        assert pump.id_for_record(rec) == "QCPump/DQA3/unit/2021-03-31 01:23:34/foo"
+        rec = {'data_key': 'foo', 'machine_id': 1, 'machine_name': "Unit 1", "room_name": None, 'work_started': dt}
+        assert pump.id_for_record(rec) == "QCPump/DQA3/1/2021-03-31 01:23:34/foo"
 
     def test_qatrack_unit_for_record(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
+        pump.dqa_machine_name_to_id['dqa3unitname'] = 1
         config = [{'dqa3 name': 'dqa3unitname', 'unit name': 'qatrackunitname'}]
         with mock.patch.object(pump, "get_config_values", return_value=config):
-            assert pump.qatrack_unit_for_record({'dqa3_unit_name': 'dqa3unitname'}) == 'qatrackunitname'
+            assert pump.qatrack_unit_for_record({'machine_id': 1}) == 'qatrackunitname'
 
     def test_work_datetimes(self):
         dt1 = datetime.datetime.now()
@@ -168,7 +175,7 @@ class TestDQA3:
             'work_completed': -1,
             'work_started': -1,
             'comment': -1,
-            'dqa3_unit_name': -1,
+            'machine_id': -1,
             'beamenergy': -1,
             'beamtype': -1,
             'test1': 1,
@@ -228,7 +235,7 @@ class TestDQA3:
                 mock_min_date.return_value = now
                 q, params = pump.prepare_dqa3_query()
                 assert "data.created >= ?" in q
-                assert "mach.MachineName IN (?,?)" in q
+                assert "mach.MachineId IN (?,?)" in q
                 assert params == [now, "dqa unit 1", "dqa unit 2"]
 
     @pytest.mark.parametrize("record,expected", [
@@ -261,42 +268,42 @@ class TestDQA3Grouped:
         dt5 = dt4 + datetime.timedelta(minutes=1)
 
         rows = [
-            {'data_key': 1, 'dqa3_unit_name': 'unit1', 'work_started': dt1},
-            {'data_key': 2, 'dqa3_unit_name': 'unit2', 'work_started': dt1},
-            {'data_key': 3, 'dqa3_unit_name': 'unit1', 'work_started': dt2},
-            {'data_key': 4, 'dqa3_unit_name': 'unit2', 'work_started': dt2},
-            {'data_key': 5, 'dqa3_unit_name': 'unit1', 'work_started': dt3},
-            {'data_key': 6, 'dqa3_unit_name': 'unit2', 'work_started': dt3},
+            {'data_key': 1, 'machine_id': 1, 'work_started': dt1},
+            {'data_key': 2, 'machine_id': 2, 'work_started': dt1},
+            {'data_key': 3, 'machine_id': 1, 'work_started': dt2},
+            {'data_key': 4, 'machine_id': 2, 'work_started': dt2},
+            {'data_key': 5, 'machine_id': 1, 'work_started': dt3},
+            {'data_key': 6, 'machine_id': 2, 'work_started': dt3},
 
-            {'data_key': 7, 'dqa3_unit_name': 'unit1', 'work_started': dt4},
-            {'data_key': 8, 'dqa3_unit_name': 'unit2', 'work_started': dt4},
-            {'data_key': 9, 'dqa3_unit_name': 'unit1', 'work_started': dt5},
-            {'data_key': 0, 'dqa3_unit_name': 'unit2', 'work_started': dt5},
+            {'data_key': 7, 'machine_id': 1, 'work_started': dt4},
+            {'data_key': 8, 'machine_id': 2, 'work_started': dt4},
+            {'data_key': 9, 'machine_id': 1, 'work_started': dt5},
+            {'data_key': 0, 'machine_id': 2, 'work_started': dt5},
         ]
 
         res = dqa3pump.group_by_machine_dates(rows, 3)
 
         expected = {
-            "unit1": {
+            1: {
                 "2021-03-31-01-23": [
-                    {"data_key": 1, "dqa3_unit_name": "unit1", "work_started": dt1},
-                    {"data_key": 3, "dqa3_unit_name": "unit1", "work_started": dt2},
-                    {"data_key": 5, "dqa3_unit_name": "unit1", "work_started": dt3}
+                    {"data_key": 1, "machine_id": 1, "work_started": dt1},
+                    {"data_key": 3, "machine_id": 1, "work_started": dt2},
+                    {"data_key": 5, "machine_id": 1, "work_started": dt3}
                 ],
                 "2021-03-31-01-35": [
-                    {"data_key": 7, "dqa3_unit_name": "unit1", "work_started": dt4},
-                    {"data_key": 9, "dqa3_unit_name": "unit1", "work_started": dt5}
+                    {"data_key": 7, "machine_id": 1, "work_started": dt4},
+                    {"data_key": 9, "machine_id": 1, "work_started": dt5}
                 ]
             },
-            "unit2": {
+            2: {
                 "2021-03-31-01-23": [
-                    {"data_key": 2, "dqa3_unit_name": "unit2", "work_started": dt1},
-                    {"data_key": 4, "dqa3_unit_name": "unit2", "work_started": dt2},
-                    {"data_key": 6, "dqa3_unit_name": "unit2", "work_started": dt3}
+                    {"data_key": 2, "machine_id": 2, "work_started": dt1},
+                    {"data_key": 4, "machine_id": 2, "work_started": dt2},
+                    {"data_key": 6, "machine_id": 2, "work_started": dt3}
                 ],
                 "2021-03-31-01-35": [
-                    {"data_key": 8, "dqa3_unit_name": "unit2", "work_started": dt4},
-                    {"data_key": 0, "dqa3_unit_name": "unit2", "work_started": dt5}
+                    {"data_key": 8, "machine_id": 2, "work_started": dt4},
+                    {"data_key": 0, "machine_id": 2, "work_started": dt5}
                 ]
             }
         }
@@ -325,9 +332,9 @@ class TestDQA3Grouped:
             }
         }
         dt1 = datetime.datetime(2021, 3, 31, 1, 23, 34)
-        fetch_results = [{'data_key': 1, 'dqa3_unit_name': 'unit1', 'work_started': dt1}]
+        fetch_results = [{'data_key': 1, 'machine_id': 1, 'work_started': dt1}]
         results = [
-            ('unit1', '2021-03-31-01-23', fetch_results),
+            (1, '2021-03-31-01-23', fetch_results),
         ]
         with mock.patch.object(pump, "prepare_dqa3_query", return_value=["", []]):
             with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.querier", return_value=fetch_results):
@@ -339,8 +346,72 @@ class TestDQA3Grouped:
         pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
         dt1 = datetime.datetime(2021, 3, 31, 1, 23, 34)
         fetch_results = [
-            {'data_key': 123, 'dqa3_unit_name': 'unit1', 'work_started': dt1},
-            {'data_key': 456, 'dqa3_unit_name': 'unit1', 'work_started': dt1},
+            {'data_key': 123, 'machine_id': 1, 'work_started': dt1},
+            {'data_key': 456, 'machine_id': 1, 'work_started': dt1},
         ]
-        rec = ('unit1', '2021-03-31-01-23', fetch_results)
-        assert pump.id_for_record(rec) == "QCPump/DQA3/unit1/2021-03-31-01-23/123/456"
+        rec = (1, '2021-03-31-01-23', fetch_results)
+        assert pump.id_for_record(rec) == "QCPump/DQA3/1/2021-03-31-01-23/123/456"
+
+    def test_values_from_record(self):
+
+        dt1 = datetime.datetime(2021, 3, 31, 1, 23)
+        dt2 = datetime.datetime(2021, 3, 31, 1, 24)
+        fetch_results = [
+            {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 6, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+            {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 9, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+        ]
+
+        rec = (1, '2021-03-31-01-23', fetch_results)
+        pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
+        results = pump.test_values_from_record(rec)
+        expected = {
+            'data_key_6e': {'value': 1},
+            'data_key_9e': {'value': 1},
+            'device_6e': {'value': '1234567'},
+            'device_9e': {'value': '1234567'},
+            'dose_6e': {'value': 99.05},
+            'dose_9e': {'value': 99.05},
+            'dose_baseline_6e': {'value': 100.0},
+            'dose_baseline_9e': {'value': 100.0},
+            'dose_diff_6e': {'value': -0.95},
+            'dose_diff_9e': {'value': -0.95},
+            'machine_name_6e': {'value': 'machine1'},
+            'machine_name_9e': {'value': 'machine1'},
+            'pressure_6e': {'value': 104.6},
+            'pressure_9e': {'value': 104.6},
+            'room_name_6e': {'value': ''},
+            'room_name_9e': {'value': ''},
+            'signature_6e': {'value': 'username'},
+            'signature_9e': {'value': 'username'},
+            'temperature_6e': {'value': 21.8},
+            'temperature_9e': {'value': 21.8}
+        }
+        assert results == expected
+
+    @pytest.mark.parametrize("method,expected",[
+        ("work_datetimes_for_record", (dt1, dt2)),
+        ("comment_for_record", "comment 1\ncomment 2"),
+        ("test_list_for_record", "DQA3 Results"),
+        ("qatrack_unit_for_record", "qatrackunitname"),
+    ])
+    def test_record_meta(self, method, expected):
+        fetch_results = [
+            {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 6, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+            {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 2', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 9, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+        ]
+
+        rec = (1, '2021-03-31-01-23', fetch_results)
+        pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
+        pump.dqa_machine_name_to_id['dqa3unitname'] = 1
+
+        pump.state = {
+            "Test List": {
+                'subsections': [[
+                    {'config_name': 'name', 'value': "DQA3 Results"},
+                ]],
+            }
+        }
+        config = [{'dqa3 name': 'dqa3unitname', 'unit name': 'qatrackunitname'}]
+        with mock.patch.object(pump, "get_config_values", return_value=config):
+            results = getattr(pump, method)(rec)
+            assert results == expected

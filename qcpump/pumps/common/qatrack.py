@@ -80,6 +80,10 @@ class QATrackAPIMixin:
         ],
     }
 
+    def __init__(self, *args, **kwargs):
+        self.qatrack_unit_names_to_ids = {}
+        super().__init__(*args, **kwargs)
+
     @property
     def autoskip(self):
         return True
@@ -144,8 +148,22 @@ class QATrackAPIMixin:
 
     def get_qatrack_unit_choices(self):
         """Fetch all available qatrack unit names"""
+        self.qatrack_unit_names_to_ids = {}
+        site_endpoint = self.construct_api_url("units/sites")
+        sites = self.get_qatrack_choices(site_endpoint)
+        site_names = {s['url']: s['name'] for s in sites}
+
         endpoint = self.construct_api_url("units/units")
-        return self.get_qatrack_choices(endpoint, "name")
+        choices = []
+        for unit in self.get_qatrack_choices(endpoint):
+            try:
+                site = "%s: " % site_names[unit['site']]
+            except KeyError:
+                site = ""
+            name = site + unit['name']
+            choices.append(name)
+            self.qatrack_unit_names_to_ids[name] = unit['number']
+        return sorted(choices)
 
     def get_qatrack_choices(self, endpoint, attribute=None, params=None, session=None, results=None):
 
@@ -306,24 +324,24 @@ class QATrackFetchAndPost(QATrackAPIMixin):
     def _utc_url_for_record(self, record):
         """Convert a record to the url (using cached value where possible) for performing a UTC"""
 
-        unit_name = self.qatrack_unit_for_record(record)
+        unit_id = self.qatrack_unit_names_to_ids[self.qatrack_unit_for_record(record)]
         test_list_name = self.test_list_for_record(record)
-        key = (unit_name, test_list_name)
+        key = (unit_id, test_list_name)
         if None in key:
             return None
         if key not in self.utc_url_cache:
-            self.utc_url_cache[key] = self._generate_utc_url(unit_name, test_list_name)
+            self.utc_url_cache[key] = self._generate_utc_url(unit_id, test_list_name)
 
         return self.utc_url_cache[key]
 
-    def _generate_utc_url(self, unit_name, utc_name):
+    def _generate_utc_url(self, unit_id, utc_name):
         """Generate a url for performing a UTC"""
 
         session = self.get_qatrack_session()
 
         params = {
             "name": utc_name,
-            "unit__name": unit_name,
+            "unit__number": unit_id,
         }
 
         try:
