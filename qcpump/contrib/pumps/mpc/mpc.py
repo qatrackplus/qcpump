@@ -114,6 +114,8 @@ def timestamp_filter(timestamp, cutoff_datetime):
 
 class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
+    DISPLAY_NAME = "MPC: QATrack MPC Pump"
+
     HELP_URL = "https://qcpump.readthedocs.io/en/stable/pumps/mpc.html"
 
     CONFIG = [

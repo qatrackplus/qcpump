@@ -197,6 +197,8 @@ class BasePump(wx.Panel):
     }
     """
 
+    DISPLAY_NAME = ""
+
     HELP_URL = "https://qcpump.readthedocs.org"
 
     # All pumps have some common options which are defined by the BASE_CONFIG

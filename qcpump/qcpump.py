@@ -112,7 +112,7 @@ class QCPumpUI(ui.VQCPumpUI):
     def OnAddPump(self, evt):
         """User requested a new pump to be added"""
         # ask user which type of pump to add
-        dlg = AddPumpDialog(list(get_pump_types().keys()), list(self.pump_windows.keys()), self)
+        dlg = AddPumpDialog(get_pump_types(), list(self.pump_windows.keys()), self)
         if dlg.ShowModal() != wx.ID_OK:
             return
 
@@ -558,13 +558,16 @@ class AddPumpDialog(ui.VAddPumpDialog):
 
         super().__init__(*args, **kwargs)
         self.existing_pump_names = [x.lower() for x in existing_pump_names]
-        self.pump_type.SetItems(pump_types)
+        self.pump_types = {}
+        for name, pt in pump_types.items():
+            key = pt.DISPLAY_NAME or name
+            self.pump_types[key] = name
+
+        self.pump_type.SetItems(list(sorted(self.pump_types.keys())))
 
     def OnPumpTypeChange(self, evt):
         """User changed pump type, set default pump name if required"""
-        cur_val = self.pump_name.GetValue()
-        if not cur_val.strip():
-            self.pump_name.SetValue(evt.GetString())
+        self.pump_name.SetValue(evt.GetString())
 
     def OnOk(self, evt):
         """Do validation after user clicks OK"""
@@ -594,7 +597,7 @@ class AddPumpDialog(ui.VAddPumpDialog):
 
     def get_pump_type(self):
         """Return the pump type name that is currently selected"""
-        return self.pump_type.GetStringSelection()
+        return self.pump_types[self.pump_type.GetStringSelection()]
 
     def get_pump_name(self):
         """Return the string currently entered for the pump name"""
