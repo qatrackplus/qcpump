@@ -300,7 +300,7 @@ class BaseDQA3:
 
 class FirebirdDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
 
-    DISPLAY_NAME = "DQA3: Firebird Individual Beams"
+    DISPLAY_NAME = "DQA3: Firebird: One Beam Per Test List"
 
     query_parameter = "?"
     db_type = "fdb"
@@ -388,7 +388,7 @@ class FirebirdDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
 
 class AtlasDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
 
-    DISPLAY_NAME = "DQA3: Atlas Individual Beams"
+    DISPLAY_NAME = "DQA3: Atlas: One Beam Per Test List"
 
     query_parameter = "?"
     db_type = "mssql"
@@ -623,7 +623,7 @@ class BaseGroupedDQA3(BaseDQA3):
 
 class FirebirdGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
 
-    DISPLAY_NAME = "DQA3: Firebird Grouped Beams"
+    DISPLAY_NAME = "DQA3: Firebird: Multiple Beams Per Test List"
 
     query_parameter = "?"
     db_type = "fdb"
@@ -730,7 +730,7 @@ class FirebirdGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
 
 class AtlasGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
 
-    DISPLAY_NAME = "DQA3: Atlas Grouped Beams"
+    DISPLAY_NAME = "DQA3: Atlas: Multiple Beams Per Test List"
 
     query_parameter = "?"
     db_type = "mssql"

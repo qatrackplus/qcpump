@@ -3,7 +3,7 @@
 
 
 
-Daily QA3 Pumps: One Test List Per Beam
+Daily QA3 Pumps: One Beam Per Test List
 =======================================
 
 This page refers to Pumps which upload results to a different test list for
@@ -11,7 +11,17 @@ each beam.  For example, if you have the following 10 beams configured on a
 single unit: 6X, 6FFF, 10X, 10FFF, 6X EDW60, 6E, 9E, 12E, 16E, 20E, then you
 will need 10 different test lists assigned to your unit in QATrack+ to record
 all of your DQA3 results.  If you prefer to combine all of your results in a
-single test list, please see: :ref:`pump_type-dqa3-grouped`.
+single test list, please see: :ref:`pump_type-dqa3-grouped`.  
+
+
+.. note::
+
+    There are two disadvantages to using the Multiple Beams Per Test List:
+
+    1. If you have many beams configured this will result in very long test lists
+    which can impact performance when uploading data, or reviewing data in QATrack+.
+    2. If you perform a measurement twice (e.g. take 2 6X measurements), only the 2nd
+    result will be included.
 
 
 QCPump currently has the ability to retrieve data from the following Daily QA3
