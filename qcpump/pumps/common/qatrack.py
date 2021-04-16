@@ -1,9 +1,12 @@
 import base64
 import datetime
 import json
-import requests
-from pypac import PACSession
+import re
 import time
+import unicodedata
+
+from pypac import PACSession
+import requests
 
 from qcpump.core.json import QCPumpJSONEncoder
 from qcpump.pumps.base import BOOLEAN, STRING, FLOAT
@@ -16,6 +19,48 @@ HTTP_OK = requests.codes['ok']
 HTTP_BAD_REQUEST = requests.codes['bad_request']
 
 MISSING_TEST_DATA_ERR = 'missing data for tests'.lower()
+
+TEST_TO_SLUG_REPLACEMENTS = [
+    ("/", "_"),
+    (" ", "_"),
+    ("-", "_"),
+    ("[mm]", "mm"),
+    ("[°]", "deg"),
+    ("[%]", "per")
+]
+
+
+def django_slugify(value):
+    """
+    Convert to ASCII if 'allow_unicode' is False. Convert spaces or repeated
+    dashes to single dashes. Remove characters that aren't alphanumerics,
+    underscores, or hyphens. Convert to lowercase. Also strip leading and
+    trailing whitespace, dashes, and underscores.
+
+    Adapted from django.utils.text [https://github.com/django/django/blob/main/django/utils/text.py] (MIT License)
+    """
+    value = str(value)
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value.lower())
+    return re.sub(r'[-\s]+', '-', value).strip('-_')
+
+
+
+def slugify(value):
+    """Convert value to valid QATrack+ slug"""
+
+    for repl, with_ in TEST_TO_SLUG_REPLACEMENTS:
+        value = value.replace(repl, with_)
+
+    value = django_slugify(value)
+
+    while "__" in value:
+        value = value.replace("__", "_")
+
+    if value[0] in '0123456789':
+        value = "_" + value
+
+    return value.lower()
 
 
 class QATrackAPIMixin:

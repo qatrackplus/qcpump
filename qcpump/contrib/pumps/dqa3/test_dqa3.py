@@ -358,34 +358,34 @@ class TestDQA3Grouped:
         dt1 = datetime.datetime(2021, 3, 31, 1, 23)
         dt2 = datetime.datetime(2021, 3, 31, 1, 24)
         fetch_results = [
-                {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 6, 'beam_type': 'Photon', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95, 'wedge_type': 'EDW', 'wedge_angle': "60", 'wedge_orient': 'Bottom-Top', 'beam_name': "foo"},
-                {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 9, 'beam_type': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95, 'wedge_type': '', 'wedge_angle': "", 'wedge_orient': '', 'beam_name': "foo"},
+                {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 6, 'beam_type': 'Photon', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95, 'wedge_type': 'EDW', 'wedge_angle': "60", 'wedge_orient': 'Bottom-Top', 'beam_name': "6 MV EDW60"},
+                {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 9, 'beam_type': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95, 'wedge_type': '', 'wedge_angle': "", 'wedge_orient': '', 'beam_name': "9 MeV"},
         ]
 
         rec = (1, '2021-03-31-01-23', fetch_results)
         pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
         results = pump.test_values_from_record(rec)
         expected = {
-            'data_key_6xedw60': {'value': 1},
-            'data_key_9e': {'value': 1},
-            'device_6xedw60': {'value': '1234567'},
-            'device_9e': {'value': '1234567'},
-            'dose_6xedw60': {'value': 99.05},
-            'dose_9e': {'value': 99.05},
-            'dose_baseline_6xedw60': {'value': 100.0},
-            'dose_baseline_9e': {'value': 100.0},
-            'dose_diff_6xedw60': {'value': -0.95},
-            'dose_diff_9e': {'value': -0.95},
-            'machine_name_6xedw60': {'value': 'machine1'},
-            'machine_name_9e': {'value': 'machine1'},
-            'pressure_6xedw60': {'value': 104.6},
-            'pressure_9e': {'value': 104.6},
-            'room_name_6xedw60': {'value': ''},
-            'room_name_9e': {'value': ''},
-            'signature_6xedw60': {'value': 'username'},
-            'signature_9e': {'value': 'username'},
-            'temperature_6xedw60': {'value': 21.8},
-            'temperature_9e': {'value': 21.8}
+            'data_key_6_mv_edw60': {'value': 1},
+            'data_key_9_mev': {'value': 1},
+            'device_6_mv_edw60': {'value': '1234567'},
+            'device_9_mev': {'value': '1234567'},
+            'dose_6_mv_edw60': {'value': 99.05},
+            'dose_9_mev': {'value': 99.05},
+            'dose_baseline_6_mv_edw60': {'value': 100.0},
+            'dose_baseline_9_mev': {'value': 100.0},
+            'dose_diff_6_mv_edw60': {'value': -0.95},
+            'dose_diff_9_mev': {'value': -0.95},
+            'machine_name_6_mv_edw60': {'value': 'machine1'},
+            'machine_name_9_mev': {'value': 'machine1'},
+            'pressure_6_mv_edw60': {'value': 104.6},
+            'pressure_9_mev': {'value': 104.6},
+            'room_name_6_mv_edw60': {'value': ''},
+            'room_name_9_mev': {'value': ''},
+            'signature_6_mv_edw60': {'value': 'username'},
+            'signature_9_mev': {'value': 'username'},
+            'temperature_6_mv_edw60': {'value': 21.8},
+            'temperature_9_mev': {'value': 21.8}
         }
         assert results == expected
 

@@ -72,6 +72,6 @@ A sample settings.json document might look like:
     {
         "LOG_LEVEL": "info",
         "DEBUG": False,
-        "PUMP_DIRECTORIES": ["C:\Users\yourusername\pumps\"],
+        "PUMP_DIRECTORIES": ["C:/Users/yourusername/pumps/"],
         "DB_CONNECT_TIMEOUT": 3
     }

@@ -6,7 +6,7 @@ import requests
 
 from qcpump.core.db import firebirdsql_query, fdb_query, mssql_query
 from qcpump.pumps.base import INT, MULTCHOICE, STRING, BasePump
-from qcpump.pumps.common.qatrack import QATrackFetchAndPost
+from qcpump.pumps.common.qatrack import QATrackFetchAndPost, slugify
 from qcpump.settings import Settings
 
 HTTP_CREATED = requests.codes['created']
@@ -590,13 +590,14 @@ class BaseGroupedDQA3(BaseDQA3):
         test_vals = {}
         for row in rows:
 
-            p = beam_params = self.beam_params_for_row(row)
+            beam_params = self.beam_params_for_row(row)
+            slug_postfix = beam_params['beam_name']
 
             for k, v in row.items():
                 if k in QUERY_META:
                     continue
 
-                slug = f"{k}_{p['energy']}{p['beam_type']}{p['wedge_type']}{p['wedge_angle']}".lower()
+                slug = slugify(f"{k}_{slug_postfix}")
                 test_vals[slug] = {'value': v}
 
         return test_vals
@@ -613,7 +614,7 @@ class BaseGroupedDQA3(BaseDQA3):
 
     def comment_for_record(self, record):
         machine, date, rows = record
-        return ('\n'.join(r.get('comment', '') for r in rows)).strip()
+        return ('\n'.join(r.get('comment') or "" for r in rows)).strip()
 
     def test_list_for_record(self, record):
         tl_name_template = self.get_config_value("Test List", "name")

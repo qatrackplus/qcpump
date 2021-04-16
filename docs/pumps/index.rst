@@ -10,6 +10,7 @@ See below for documentation relevant to specific pump types.
    config.rst
    filemover.rst
    dqa3.rst
+   dqa3_grouped.rst
    mpc.rst
 
 

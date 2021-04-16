@@ -7,7 +7,7 @@ from pathlib import Path
 import jinja2
 
 from qcpump.pumps.base import DIRECTORY, BasePump, INT, STRING
-from qcpump.pumps.common.qatrack import QATrackFetchAndPost
+from qcpump.pumps.common.qatrack import QATrackFetchAndPost, slugify
 
 MPC_PATH_RE = re.compile(r"""
      .*                     # preamble like NDS-WKS
@@ -188,14 +188,6 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
         "CollimationGroup/MLCBacklashGroup/MLCBacklashLeavesB/MLCBacklashLeaf",
     ]
 
-    TEST_TO_SLUG_REPLACEMENTS = [
-        ("/", "_"),
-        (" ", "_"),
-        ("[mm]", "mm"),
-        ("[°]", "deg"),
-        ("[%]", "per")
-    ]
-
     @property
     def autoskip(self):
         return True
@@ -341,9 +333,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
     def slugify(self, test_name, beam_type):
         """Take a test name read from CSV file and return a valid test slug"""
-        for repl, with_ in self.TEST_TO_SLUG_REPLACEMENTS:
-            test_name = test_name.replace(repl, with_)
-        return (test_name + "_" + beam_type).lower()
+        return slugify(test_name + "_" + beam_type)
 
     def test_value(self, test_val):
         return float(test_val.strip())

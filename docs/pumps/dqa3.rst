@@ -3,11 +3,19 @@
 
 
 
-Daily QA3 Pumps
-===============
+Daily QA3 Pumps: One Test List Per Beam
+=======================================
 
-QCPump has the ability to retrieve data from the following Daily QA3 data
-sources:
+This page refers to Pumps which upload results to a different test list for
+each beam.  For example, if you have the following 10 beams configured on a
+single unit: 6X, 6FFF, 10X, 10FFF, 6X EDW60, 6E, 9E, 12E, 16E, 20E, then you
+will need 10 different test lists assigned to your unit in QATrack+ to record
+all of your DQA3 results.  If you prefer to combine all of your results in a
+single test list, please see: :ref:`pump_type-dqa3-grouped`.
+
+
+QCPump currently has the ability to retrieve data from the following Daily QA3
+data sources:
 
 * DQA3 Firebird Database version 01.03
 * DQA3 Firebird Database version 01.04
@@ -16,8 +24,8 @@ sources:
 
 .. note::
 
-    The DQA3 pumps are tested on QATrack+ v3.1. QCPump is not 
-    currently compatible with QATrack v0.3.X
+    The DQA3 pumps are tested on QATrack+ v3.1.X QCPump is not compatible with
+    QATrack v0.3.X
 
 
 .. contents:: Contents
@@ -70,37 +78,45 @@ want to upload results for.  For example, if on your linacs you use 6X, 6FFF,
 for DQA3 results.  The Test List must have a specific set of attributes:
 
 Test List Name
-    In order for QCPump to find the correct test list to upload data to, the
-    Test List Name must contain both the beam type (X for Photon, E for
-    Electron, FFF for flattening filter free).  By default QCPump uses a test list
-    name like:
 
-        Daily QA3 Results: {{ energy }}{{ beam_type }}{{ wedge_type }}{{ wedge_angle }}
+    The simplest method to have QCPump find the correct test list to upload
+    data to is to give the test list a name which contains the name of the DQA3
+    Test (e.g. "6 MV", or "6X Daily", or "6 MV EDW60") By default QCPump uses a
+    test list name like:
 
-    where `{{ energy }}`, `{{ beam_type }}`, `{{ wedge_type }}`, and `{{
-    wedge_angle }}` are replaced with the actual beam type and energy (e.g.
-    "Daily QA3 Results: 6X", "Daily QA3 Results: 9E", or "Daily QA3 Results: 6XEDW90).
+        Daily QA3 Results: {{ beam_name }}
 
-    The complete list of context variables available for the test list is:
+    where QCPump will replace `{{ beam_name }}` with the name of the DQA3 test
+    beam (e.g. "Daily QA3 Results: 6X") before searching QATrack+ for the test
+    list to perform.  You may also customize your test list name template with
+    other variables which include:
 
-    * **energy**: The beam energy: 6, 9, 10, 15, 18 etc
-    * **beam_type**: One of "Photon", "FFF", or "Electron"
-    * **wedge_type**: Empty for non wedge beams, otherwise "EDW" or "Static"
-    * **wedge_angle**: Empty for non wedge beams, otherwise 30, 45, 60 etc
-    * **wedge_orient**: `dqa3_template.wedgeorient` for FBD databases, or
-      `MachineTemplate.WedgeOrient` for Atlas databases.
-    * **beam_name**: `dqa3_template.tree_name` from a Firebird database (e.g.
-      "6 MV", "6MeV", "6MV WDG", or `MachineTemplate.MachineTestName` from an
-      Atlas database. e.g. ("6 MV DQA3 Daily", "6MV EDW60 Weekly", "20 MeV DQA3
-      Daily")
-    * **device**: Device serial number
-    * **machine_name**: `dqa3_machine.tree_name` for FBD databases, or
-      `Machine.MachineName` for Atlas databases.
-    * **room_name**: `room.tree_name` for FBD databases, or
-      `Machine.RoomNumber` for Atlas databases.
+    beam_name
+        `dqa3_template.tree_name` from a Firebird database (e.g.  "6 MV",
+        "6MeV", "6MV WDG", or `MachineTemplate.MachineTestName` from an Atlas
+        database. e.g. ("6 MV DQA3 Daily", "6MV EDW60 Weekly", "20 MeV DQA3
+        Daily")
+    energy
+        The beam energy: 6, 9, 10, 15, 18 etc
+    beam_type
+        One of "Photon", "FFF", or "Electron"
+    wedge_type
+        Empty for non wedge beams, otherwise "EDW" or "Static"
+    wedge_angle
+        Empty for non wedge beams, otherwise 30, 45, 60 etc
+    wedge_orient
+        `dqa3_template.wedgeorient` for FBD databases, or
+        `MachineTemplate.WedgeOrient` for Atlas databases.
+    device
+        Device serial number
+    machine_name
+        `dqa3_machine.tree_name` for FBD databases, or `Machine.MachineName` for Atlas databases.
+    room_name
+        `room.tree_name` for FBD databases, or `Machine.RoomNumber` for Atlas databases.
 
 
-The following tests are all optional:
+In order to record your data in QATrack+ you will need to add tests to your
+Test list with one or more of the following macro names:
 
 data_key: String 
     data_key is a key from the DQA3 database used by QCPump and QATrack+ to
@@ -197,6 +213,14 @@ yshift_diff: Simple Numerical
     Difference between measured and baseline shift of center of profile in y direction
 
 
+Here is what a sample test list might look like:
+
+.. figure:: images/dqa3/dqa3_single_test_list.png
+    :alt: A test list for recording 6MV results
+
+    A test list for recording 6MV results
+
+
 Assign Test Lists to Units
 ..........................
 
@@ -247,7 +271,7 @@ Name
     Enter a template for searching QATrack+ for the name of the Test List you
     want to upload data to. The default is :
 
-        `Daily QA3 Results: {{ energy }}{{ beam_type }}`
+        `Daily QA3 Results: {{ energy }}{{ beam_type }}{{ wedge_type }}{{ wedge_angle }}`
 
     In the template `{{ energy }}` will be replaced by the DQA3 beam energy
     (e.g. 6, 10, 15) and `{{ beam_type }}` will be replaced by the DQA3 beam
@@ -269,8 +293,8 @@ Unit Name
 
 .. _pump_type-dqa3-fbd:
 
-Firebird DQA3 Pump Type
------------------------
+DQA3: Firebird Individual Beams Pump Type
+-----------------------------------------
 
 Config options specific to Firebird DQA3 databases (01.03.00.00 & 01.04.00.00).
 
@@ -374,8 +398,8 @@ the `User` and `Password` settings described above.
 
 .. _pump_type-dqa3-atlas:
 
-Atlas (SQL Server) DQA3 Pump Type
----------------------------------
+DQA3: Atlas Individual Beams DQA3 Pump Type
+-------------------------------------------
 
 
 Config options specific to Atlas DQA3 databases (SQLServer).
