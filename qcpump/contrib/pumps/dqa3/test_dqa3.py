@@ -154,7 +154,7 @@ class TestDQA3:
     def test_id_for_record(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         dt = datetime.datetime(2021, 3, 31, 1, 23, 34)
-        rec = {'data_key': 'foo', 'machine_id': 1, 'machine_name': "Unit 1", "room_name": None, 'work_started': dt}
+        rec = {'data_key': 'foo', 'machine_id': 1, 'machine_name': "Unit 1", "room_name": None, 'work_started': dt, 'wedge_type': 'EDW', 'wedge_angle': "60", 'wedge_orient': 'Bottom-Top'}
         assert pump.id_for_record(rec) == "QCPump/DQA3/1/2021-03-31 01:23:34/foo"
 
     def test_qatrack_unit_for_record(self):
@@ -176,8 +176,8 @@ class TestDQA3:
             'work_started': -1,
             'comment': -1,
             'machine_id': -1,
-            'beamenergy': -1,
-            'beamtype': -1,
+            'beam_energy': -1,
+            'beam_type': -1,
             'test1': 1,
             'test2': 2,
         }
@@ -239,14 +239,15 @@ class TestDQA3:
                 assert params == [now, "dqa unit 1", "dqa unit 2"]
 
     @pytest.mark.parametrize("record,expected", [
-        ({"beamtype": "FfF", "beamenergy": 6}, "DQA3: 6FFF"),
-        ({"beamtype": "eLecTron", "beamenergy": 6}, "DQA3: 6E"),
-        ({"beamtype": "PhOtOn", "beamenergy": 6}, "DQA3: 6X"),
+        ({"beam_type": "FfF", "beam_energy": 6, 'wedge_type': "", "wedge_angle": "", 'wedge_orient': "", "device": "", "machine_name": "", "room_name": "", "beam_name": ""}, "DQA3: 6FFF"),
+        ({"beam_type": "eLecTron", "beam_energy": 6, 'wedge_type': "", "wedge_angle": "", 'wedge_orient': "", "device": "", "machine_name": "", "room_name": "", "beam_name": ""}, "DQA3: 6E"),
+        ({"beam_type": "PhOtOn", "beam_energy": 6, 'wedge_type': "", "wedge_angle": "", 'wedge_orient': "", "device": "", "machine_name": "", "room_name": "", "beam_name": ""}, "DQA3: 6X"),
+        ({"beam_type": "PhOtOn", "beam_energy": 6, 'wedge_type': "EDW", "wedge_angle": "60", 'wedge_orient': "", "device": "", "machine_name": "", "room_name": "", "beam_name": ""}, "DQA3: 6XEDW60"),
     ])
     def test_test_list_for_record(self, record, expected):
 
         pump = self.get_pump(dqa3pump.AtlasDQA3)
-        with mock.patch.object(pump, "get_config_value", return_value="DQA3: {{energy}}{{beam_type}}"):
+        with mock.patch.object(pump, "get_config_value", return_value="DQA3: {{energy}}{{beam_type}}{{wedge_type}}{{wedge_angle}}"):
             assert pump.test_list_for_record(record) == expected
 
 
@@ -357,33 +358,33 @@ class TestDQA3Grouped:
         dt1 = datetime.datetime(2021, 3, 31, 1, 23)
         dt2 = datetime.datetime(2021, 3, 31, 1, 24)
         fetch_results = [
-            {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 6, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
-            {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 9, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+                {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 6, 'beam_type': 'Photon', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95, 'wedge_type': 'EDW', 'wedge_angle': "60", 'wedge_orient': 'Bottom-Top', 'beam_name': "foo"},
+                {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 9, 'beam_type': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95, 'wedge_type': '', 'wedge_angle': "", 'wedge_orient': '', 'beam_name': "foo"},
         ]
 
         rec = (1, '2021-03-31-01-23', fetch_results)
         pump = self.get_pump(dqa3pump.AtlasGroupedDQA3)
         results = pump.test_values_from_record(rec)
         expected = {
-            'data_key_6e': {'value': 1},
+            'data_key_6xedw60': {'value': 1},
             'data_key_9e': {'value': 1},
-            'device_6e': {'value': '1234567'},
+            'device_6xedw60': {'value': '1234567'},
             'device_9e': {'value': '1234567'},
-            'dose_6e': {'value': 99.05},
+            'dose_6xedw60': {'value': 99.05},
             'dose_9e': {'value': 99.05},
-            'dose_baseline_6e': {'value': 100.0},
+            'dose_baseline_6xedw60': {'value': 100.0},
             'dose_baseline_9e': {'value': 100.0},
-            'dose_diff_6e': {'value': -0.95},
+            'dose_diff_6xedw60': {'value': -0.95},
             'dose_diff_9e': {'value': -0.95},
-            'machine_name_6e': {'value': 'machine1'},
+            'machine_name_6xedw60': {'value': 'machine1'},
             'machine_name_9e': {'value': 'machine1'},
-            'pressure_6e': {'value': 104.6},
+            'pressure_6xedw60': {'value': 104.6},
             'pressure_9e': {'value': 104.6},
-            'room_name_6e': {'value': ''},
+            'room_name_6xedw60': {'value': ''},
             'room_name_9e': {'value': ''},
-            'signature_6e': {'value': 'username'},
+            'signature_6xedw60': {'value': 'username'},
             'signature_9e': {'value': 'username'},
-            'temperature_6e': {'value': 21.8},
+            'temperature_6xedw60': {'value': 21.8},
             'temperature_9e': {'value': 21.8}
         }
         assert results == expected
@@ -396,8 +397,8 @@ class TestDQA3Grouped:
     ])
     def test_record_meta(self, method, expected):
         fetch_results = [
-            {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 6, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
-            {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 2', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beamenergy': 9, 'beamtype': 'Electron', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+                {'machine_id': 1, 'data_key': 1, 'work_started': dt2, 'comment': 'comment 1', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 6, 'beam_type': 'Electron', 'wedge_type': 'EDW', 'wedge_angle': "60", 'wedge_orient': 'Bottom-Top', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
+                {'machine_id': 1, 'data_key': 1, 'work_started': dt1, 'comment': 'comment 2', 'machine_name': 'machine1', 'room_name': '', 'signature': 'username', 'device': '1234567', 'beam_energy': 9, 'beam_type': 'Electron', 'wedge_type': 'EDW', 'wedge_angle': "60", 'wedge_orient': 'Bottom-Top', 'temperature': 21.8, 'pressure': 104.6, 'dose': 99.05, 'dose_baseline': 100.000, 'dose_diff': -0.95},
         ]
 
         rec = (1, '2021-03-31-01-23', fetch_results)

@@ -75,20 +75,36 @@ Test List Name
     Electron, FFF for flattening filter free).  By default QCPump uses a test list
     name like:
 
-        Daily QA3 Results: {{ energy }}{{ beam_type }}
+        Daily QA3 Results: {{ energy }}{{ beam_type }}{{ wedge_type }}{{ wedge_angle }}
 
-    where `{{ energy }}` and `{{ beam_type }}` are replaced with the actual
-    beam type and energy (e.g. "Daily QA3 Results: 6X" or "Daily QA3 Results: 9E").
-    
-The test list must also have tests with the following macro names and test
-types defined:
+    where `{{ energy }}`, `{{ beam_type }}`, `{{ wedge_type }}`, and `{{
+    wedge_angle }}` are replaced with the actual beam type and energy (e.g.
+    "Daily QA3 Results: 6X", "Daily QA3 Results: 9E", or "Daily QA3 Results: 6XEDW90).
+
+    The complete list of context variables available for the test list is:
+
+    * **energy**: The beam energy: 6, 9, 10, 15, 18 etc
+    * **beam_type**: One of "Photon", "FFF", or "Electron"
+    * **wedge_type**: Empty for non wedge beams, otherwise "EDW" or "Static"
+    * **wedge_angle**: Empty for non wedge beams, otherwise 30, 45, 60 etc
+    * **wedge_orient**: `dqa3_template.wedgeorient` for FBD databases, or
+      `MachineTemplate.WedgeOrient` for Atlas databases.
+    * **beam_name**: `dqa3_template.tree_name` from a Firebird database (e.g.
+      "6 MV", "6MeV", "6MV WDG", or `MachineTemplate.MachineTestName` from an
+      Atlas database. e.g. ("6 MV DQA3 Daily", "6MV EDW60 Weekly", "20 MeV DQA3
+      Daily")
+    * **device**: Device serial number
+    * **machine_name**: `dqa3_machine.tree_name` for FBD databases, or
+      `Machine.MachineName` for Atlas databases.
+    * **room_name**: `room.tree_name` for FBD databases, or
+      `Machine.RoomNumber` for Atlas databases.
+
+
+The following tests are all optional:
 
 data_key: String 
     data_key is a key from the DQA3 database used by QCPump and QATrack+ to
     ensure duplicate entries are not uploaded
-
-
-The following tests are all optional:
 
 signature: String
     signature is used to record the username of who completed the measurement

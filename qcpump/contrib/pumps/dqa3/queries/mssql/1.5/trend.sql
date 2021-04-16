@@ -7,11 +7,16 @@ SELECT
     mach.MachineId as machine_id,
     data.CollectedBy as signature,
     dev.SerialNumber as device,
-    energy.EnergyValue as beamenergy,
+    energy.EnergyValue as beam_energy,
     CASE
         WHEN energy.BeamTypeFlag=1 then 'FFF'
         ELSE energy.BeamType
-    END as beamtype,
+    END as beam_type,
+    template.MachineTestName as beam_name,
+    template.WedgeType as wedge_type,
+    template.WedgeAngle as wedge_angle,
+    template.WedgeOrient as wedge_orient,
+
     data.temperature as temperature,
     data.pressure as pressure,
 

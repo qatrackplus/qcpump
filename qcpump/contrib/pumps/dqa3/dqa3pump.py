@@ -28,8 +28,12 @@ QUERY_META = [
     'work_completed',
     'comment',
     'machine_id',
-    'beamenergy',
-    'beamtype',
+    'beam_energy',
+    'beam_type',
+    'beam_name',
+    'wedge_type',
+    'wedge_angle',
+    'wedge_orient',
 ]
 
 
@@ -50,7 +54,7 @@ class BaseDQA3:
                 'type': STRING,
                 'required': True,
                 'help': "Enter a template for the name of the Test List you want to upload data to.",
-                'default': "Daily QA3 Results: {{ energy }}{{ beam_type }}",
+                'default': "Daily QA3 Results: {{ energy }}{{ beam_type }}{{ wedge_type }}{{ wedge_angle }}",
             },
         ]
     }
@@ -246,15 +250,14 @@ class BaseDQA3:
         return q, [self.min_date] + units
 
     def test_list_for_record(self, record):
-        energy, beam_type = self.energy_and_beam_type_for_row(record)
+        beam_params = self.beam_params_for_row(record)
         tl_name_template = self.get_config_value("Test List", "name")
         template = jinja2.Template(tl_name_template, undefined=jinja2.StrictUndefined)
-        context = {'energy': energy, 'beam_type': beam_type}
-        return template.render(context)
+        return template.render(beam_params)
 
-    def energy_and_beam_type_for_row(self, row):
+    def beam_params_for_row(self, row):
 
-        dqa_beam_type = row['beamtype'].lower()
+        dqa_beam_type = row['beam_type'].lower()
 
         if dqa_beam_type == "fff":
             beam_type = "FFF"
@@ -263,8 +266,36 @@ class BaseDQA3:
         else:
             beam_type = "X"
 
-        energy = row['beamenergy']
-        return energy, beam_type
+        dqa_wedge_type = (row['wedge_type']  or "").lower()
+        if dqa_wedge_type in ["dynamic", "edw"]:
+            wedge_type = "EDW"
+        elif dqa_wedge_type in ["none", ""]:
+            wedge_type = ""
+        else:
+            wedge_type = "Static"
+
+        dqa_wedge_angle = str(row['wedge_angle']  or "").lower()
+        if dqa_wedge_angle in ["0", "none"]:
+            wedge_angle = ""
+        else:
+            wedge_angle = dqa_wedge_angle
+
+        wedge_orient = str(row['wedge_orient'] or "")
+
+        energy = row['beam_energy']
+
+        beam_params = {
+            'device': row['device'],
+            'machine_name': row['machine_name'],
+            'room_name': row['room_name'],
+            'beam_name': row['beam_name'],
+            'energy': row['beam_energy'],
+            'beam_type': beam_type,
+            'wedge_type': wedge_type,
+            'wedge_angle': wedge_angle,
+            'wedge_orient': wedge_orient,
+        }
+        return beam_params
 
 
 class FirebirdDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
@@ -555,13 +586,13 @@ class BaseGroupedDQA3(BaseDQA3):
         test_vals = {}
         for row in rows:
 
-            energy, beam_type = self.energy_and_beam_type_for_row(row)
+            p = beam_params = self.beam_params_for_row(row)
 
             for k, v in row.items():
                 if k in QUERY_META:
                     continue
 
-                slug = f'{k}_{energy}{beam_type}'.lower()
+                slug = f"{k}_{p['energy']}{p['beam_type']}{p['wedge_type']}{p['wedge_angle']}".lower()
                 test_vals[slug] = {'value': v}
 
         return test_vals
