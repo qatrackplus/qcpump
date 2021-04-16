@@ -455,14 +455,11 @@ class QATrackFetchAndPost(QATrackAPIMixin):
 
 class QATrackFetchAndPostTextFile(QATrackFetchAndPost):
 
-    def _duplicate_query_params(self, slug, value):
-        return {
-            'unit_test_info__test__slug': slug,
-            'attachments__attachment__icontains': value,
-        }
+    def slug_and_filename_for_record(self, record):
+        raise NotImplementedError
 
     def test_values_from_record(self, record):
-        slug, filename = self.slug_and_value_to_check_for_duplicates(record)
+        slug, filename = self.slug_and_filename_for_record(record)
         return {
             slug: {
                 "value": record.read_text(),
@@ -477,7 +474,7 @@ class QATrackFetchAndPostBinaryFile(QATrackFetchAndPostTextFile):
     ENCODING = "utf-8"
 
     def test_values_from_record(self, record):
-        slug, filename = self.slug_and_value_to_check_for_duplicates(record)
+        slug, filename = self.slug_and_filename_for_record(record)
         value = base64.b64encode(record.read_bytes().decode(self.ENCODING)),
         return {
             slug: {
