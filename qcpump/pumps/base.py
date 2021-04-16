@@ -1319,7 +1319,7 @@ class BasePump(wx.Panel):
 
     def log_warning(self, msg):
         """convenience method for sending a warning message"""
-        self.log(logging.ERROR, msg)
+        self.log(logging.WARNING, msg)
 
     def log_error(self, msg):
         """convenience method for sending an error message"""
