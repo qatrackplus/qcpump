@@ -1,7 +1,6 @@
 SELECT
     tr.data_key as data_key,
-    tr.measured_datetime as work_completed,
-    DATEADD(minute, -1 , tr.measured_datetime) as work_started,
+    tr.measured_datetime as work_started
     data.comments as comment,
     mach.mach_key as machine_id,
     mach.tree_name as machine_name,
