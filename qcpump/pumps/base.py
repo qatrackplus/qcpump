@@ -263,6 +263,7 @@ class BasePump(wx.Panel):
         self.Bind(EVT_VALIDATION_COMPLETE, self.OnValidationComplete)
         self.Bind(EVT_INDEPENDENT_CHOICES_COMPLETE, self.OnIndependentChoicesComplete)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
+        self.configured = False
 
     def configure(self, pump_type, name, state=None):
         """Configure this pump window.  If state is passed then those config
@@ -324,6 +325,8 @@ class BasePump(wx.Panel):
 
         # Call the Base classes setup method to do any post config setup required
         self.setup()
+
+        self.configured = True
 
     def setup(self):
         """Override this method to do any custom setup you want (e.g. setting
@@ -1286,6 +1289,8 @@ class BasePump(wx.Panel):
 
     def OnIdle(self, evt):
         """Check if there's any validation to do"""
+        if not self.configured:
+            return
         validation_waiting = self.validation_queue.qsize() > 0
         if validation_waiting:
             validation_group = self.validation_queue.get()

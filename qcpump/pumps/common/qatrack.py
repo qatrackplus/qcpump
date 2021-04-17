@@ -9,7 +9,7 @@ from pypac import PACSession
 import requests
 
 from qcpump.core.json import QCPumpJSONEncoder
-from qcpump.pumps.base import BOOLEAN, STRING, FLOAT
+from qcpump.pumps.base import BOOLEAN, STRING, FLOAT, DIRECTORY
 from qcpump.settings import Settings
 
 settings = Settings()
@@ -43,7 +43,6 @@ def django_slugify(value):
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
-
 
 
 def slugify(value):
@@ -455,14 +454,65 @@ class QATrackFetchAndPost(QATrackAPIMixin):
 
 class QATrackFetchAndPostTextFile(QATrackFetchAndPost):
 
+    CONFIG = [
+        QATrackFetchAndPost.QATRACK_API_CONFIG,
+        {
+            'name': 'File Config',
+            'multiple': True,
+            'validation': 'validate_source_dest',
+            'fields': [
+                {
+                    'name': 'source',
+                    'type': DIRECTORY,
+                    'required': True,
+                    'help': "Enter the source directory you want to watch for files",
+                },
+                {
+                    'name': 'destination',
+                    'type': DIRECTORY,
+                    'required': True,
+                    'help': "Enter the target directory that you want move files to after uploading.",
+                },
+                {
+                    'name': 'recursive',
+                    'type': BOOLEAN,
+                    'required': True,
+                    'default': False,
+                    'help': "Should files from subdirectories be included?",
+                },
+                {
+                    'name': 'pattern',
+                    'type': STRING,
+                    'required': True,
+                    'default': "*",
+                    'help': (
+                        "Enter a file globbing pattern (e.g. 'some-name-*.txt', or '*.dcm') to only "
+                        "include certain files. Use '*' to include all files."
+                    ),
+                },
+                {
+                    'name': 'ignore pattern',
+                    'type': STRING,
+                    'required': True,
+                    'default': "",
+                    'help': (
+                        "Enter a file globbing pattern (e.g. 'some-name-*.txt') to ignore "
+                        "certain files. Leave blank to not exclude any files."
+                    ),
+                },
+            ],
+        },
+    ]
+
     def slug_and_filename_for_record(self, record):
         raise NotImplementedError
 
     def test_values_from_record(self, record):
+        unit, path = record
         slug, filename = self.slug_and_filename_for_record(record)
         return {
             slug: {
-                "value": record.read_text(),
+                "value": path.read_text(),
                 "filename": filename,
                 "encoding": "text",
             }
