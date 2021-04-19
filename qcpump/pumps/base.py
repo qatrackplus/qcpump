@@ -1,3 +1,4 @@
+from collections import defaultdict
 from queue import Queue
 import copy
 import inspect
@@ -817,7 +818,6 @@ class BasePump(wx.Panel):
         levels = dependencies.generate_validation_level_subset(section, self.dependencies)
         self.add_levels_to_queue(levels)
 
-
     def make_validation_group_id(self):
         """Return a unique string to identify a validation group"""
         return str(uuid4())
@@ -863,7 +863,7 @@ class BasePump(wx.Panel):
         for level in levels:
 
             # container to hold results from validation threads
-            thread_results = {}
+            thread_results = defaultdict(list)
             threads = []
             for section in level:
 
@@ -872,14 +872,16 @@ class BasePump(wx.Panel):
                 grid = self.grids[section]
                 grid_id = grid.GetId()
                 validation_data = self.get_validation_data_for_grid(grid)
+
                 validator = self.grid_validators[grid_id]
 
-                t = threading.Thread(
-                    target=self._run_validation_thread,
-                    args=(grid_id, section, validator, validation_data, thread_results),
-                    daemon=True,
-                )
-                t.start()
+                for sub_idx, subsection_data in enumerate(validation_data):
+                    t = threading.Thread(
+                        target=self._run_validation_thread,
+                        args=(grid_id, section, validator, sub_idx, subsection_data, thread_results),
+                        daemon=True,
+                    )
+                    t.start()
                 threads.append((section, t))
 
             # wait for all threads to finish and set the results
@@ -887,7 +889,8 @@ class BasePump(wx.Panel):
             for section, t in threads:
                 t.join()
                 result_set['results'].append(thread_results[section])
-                if thread_results[section]['valid']:
+                all_valid = all(res['valid'] for res in thread_results[section])
+                if all_valid:
                     for dependent_section in self.depends_on[section]:
                         needs_new_choices.add(dependent_section)
 
@@ -928,7 +931,7 @@ class BasePump(wx.Panel):
 
         thread_results[section] = choice_cache
 
-    def _run_validation_thread(self, grid_id, section, validator, validation_data, thread_results):
+    def _run_validation_thread(self, grid_id, section, validator, subsection_idx, validation_data, thread_results):
         """Wrapper around the pumps validator to set results required for updating UI later"""
 
         try:
@@ -943,9 +946,10 @@ class BasePump(wx.Panel):
             'message': msg,
             "exception": exception,
             "section": section,
+            "subsection_idx": subsection_idx,
             'grid_id': grid_id,
         }
-        thread_results[section] = data
+        thread_results[section].append(data)
 
     def _grid_validator(self, section, grid_id, validator, validation_data):
 
@@ -976,26 +980,39 @@ class BasePump(wx.Panel):
 
         result_set = evt.GetValue()
         group_id = result_set['group_id']
-        for result in result_set['results']:
-            if result['exception']:
-                self.log_critical(result['exception'])
+        # Hoped these changes would result in sub_sction_results
+        # getting multiple values from all subsections but looks like that's not
+        # the case
+        for sub_section_results in result_set['results']:
+            messages = []
+            valid = True
+            multiple = self.configd[sub_section_results[0]['section']]['multiple']
+            for result in sub_section_results:
+                valid = valid and result['valid']
+                sub_idx = result['subsection_idx'] + 1
+                msg_prefix = "" if not multiple else f"{result['section']} #{sub_idx}: "
+                messages.append(msg_prefix + result['message'])
+                if result['exception']:
+                    self.log_critical(result['exception'])
+            message = '\n'.join(messages)
 
-            if self.most_recent_validation_group[result['section']] != group_id:
+            first_result = sub_section_results[0]
+            if self.most_recent_validation_group[first_result['section']] != group_id:
                 self.log_debug(
                     f"Ignoring results from group {group_id} for "
-                    f"section {result['section']} because they are not the latest"
+                    f"section {first_result['section']} because they are not the latest"
                 )
                 continue
 
             self.log_debug(
                 f"Using results from group {group_id} for "
-                f"section {result['section']} because they are the most recent"
+                f"section {first_result['section']} because they are the most recent"
             )
 
-            self.grid_validation_state[result['grid_id']] = result['valid'], result['message']
+            self.grid_validation_state[first_result['grid_id']] = (valid, message)
             self.update_grid_section_choices(result_set['choices'])
-            self.update_grid_validation_message(result['grid_id'], result['valid'], result['message'])
-            self.update_grid_status(result['section'])
+            self.update_grid_validation_message(sub_section_results[0]['grid_id'], valid, message)
+            self.update_grid_status(sub_section_results[0]['section'])
 
     def resize_grids(self):
         """Set the grid sizes so that no scrollbars are required"""
@@ -1102,13 +1119,19 @@ class BasePump(wx.Panel):
 
     def get_validation_data_for_grid(self, grid):
         """Return a dict of form {field_name: value} for all properties from a grid"""
-        validation_data = {}
+        validation_data = [{}]
+
         for p in grid.Properties:
             data = p.GetClientData()
+            field_name = data['field_name']
             val = p.GetValue()
             if data['field_type'] == MULTCHOICE:
                 val = p.GetValueAsString()
-            validation_data[data['field_name']] = val
+
+            if field_name in validation_data[-1]:
+                validation_data.append({})
+
+            validation_data[-1][data['field_name']] = val
 
         return validation_data
 
