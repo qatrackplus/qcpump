@@ -287,6 +287,8 @@ class QATrackFetchAndPost(QATrackAPIMixin):
             self.log_info(
                 f"Successfully recorded record with id={record_id} from {payload['work_completed']}"
             )
+
+            self.post_process(record)
         else:
             self.log_info("No new records found")
 
@@ -305,6 +307,9 @@ class QATrackFetchAndPost(QATrackAPIMixin):
 
     def id_for_record(self, record):
         raise NotImplementedError
+
+    def post_process(self, record):
+        pass
 
     def work_datetimes_for_record(self, record):
         now = datetime.datetime.now()
@@ -508,7 +513,7 @@ class QATrackFetchAndPostTextFile(QATrackFetchAndPost):
         raise NotImplementedError
 
     def test_values_from_record(self, record):
-        unit, path = record
+        path = record[1]  # (unit, path, *args)
         slug, filename = self.slug_and_filename_for_record(record)
         return {
             slug: {
@@ -524,8 +529,9 @@ class QATrackFetchAndPostBinaryFile(QATrackFetchAndPostTextFile):
     ENCODING = "utf-8"
 
     def test_values_from_record(self, record):
+        path = record[1]  # (unit, path, *args)
         slug, filename = self.slug_and_filename_for_record(record)
-        value = base64.b64encode(record.read_bytes().decode(self.ENCODING)),
+        value = base64.b64encode(path.read_bytes().decode(self.ENCODING)),
         return {
             slug: {
                 "value": value,

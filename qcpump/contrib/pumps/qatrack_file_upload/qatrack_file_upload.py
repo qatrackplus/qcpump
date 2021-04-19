@@ -3,102 +3,98 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from qcpump.pumps.base import STRING, BasePump, DIRECTORY, BOOLEAN, MULTCHOICE
-from qcpump.pumps.common.qatrack import QATrackFetchAndPostTextFile
+from qcpump.pumps.common.qatrack import QATrackFetchAndPostTextFile, QATrackFetchAndPostBinaryFile
 
 
-class QATrackGenericTextFileUploader(QATrackFetchAndPostTextFile, BasePump):
+class BaseQATrackGenericUploader:
 
-    DISPLAY_NAME = "QATrack+ File Upload: Generic Text File"
-    HELP_URL = "https://qcpump.qatrackplus.com/en/stable/pumps/qatrack_file_upload.html"
+    TEST_LIST_CONFIG = {
+        'name': "Test List",
+        'multiple': False,
+        'dependencies': ["QATrack+ API"],
+        'validation': 'validate_test_list',
+        'fields': [
+            {
+                'name': 'name',
+                'type': STRING,
+                'required': True,
+                'help': "Enter the name of the Test List you want to upload data to.",
+            },
+            {
+                'name': 'slug',
+                'label': "Test Macro Name",
+                'type': STRING,
+                'required': True,
+                'help': "Enter the macro name of the Upload test in this test list.",
+                'default': 'upload',
+            },
+        ]
+    }
 
-    CONFIG = [
-        QATrackFetchAndPostTextFile.QATRACK_API_CONFIG,
-        {
-            'name': "Test List",
-            'multiple': False,
-            'dependencies': ["QATrack+ API"],
-            'validation': 'validate_test_list',
-            'fields': [
-                {
-                    'name': 'name',
-                    'type': STRING,
-                    'required': True,
-                    'help': "Enter the name of the Test List you want to upload data to.",
-                },
-                {
-                    'name': 'slug',
-                    'label': "Test Macro Name",
-                    'type': STRING,
-                    'required': True,
-                    'help': "Enter the macro name of the Upload test in this test list.",
-                    'default': 'upload',
-                },
-            ]
-        },
-        {
-            'name': 'File Types',
-            'fields': [
-                {
-                    'name': 'recursive',
-                    'type': BOOLEAN,
-                    'required': True,
-                    'default': False,
-                    'help': "Should files from subdirectories be included?",
-                },
-                {
-                    'name': 'pattern',
-                    'type': STRING,
-                    'required': True,
-                    'default': "*",
-                    'help': (
-                        "Enter a file globbing pattern (e.g. 'some-name-*.txt') to only "
-                        "include certain files. Use '*' to include all files."
-                    ),
-                },
-                {
-                    'name': 'ignore pattern',
-                    'type': STRING,
-                    'required': True,
-                    'default': "",
-                    'help': (
-                        "Enter a file globbing pattern (e.g. 'some-name-*.txt') to ignore "
-                        "certain files. Leave blank to not exclude any files."
-                    ),
-                },
-            ],
-        },
-        {
-            'name': 'Directories',
-            'multiple': True,
-            'validation': 'validate_source_dest',
-            'dependencies': ["QATrack+ API"],
-            'fields': [
-                {
-                    'name': 'unit name',
-                    'label': "QATrack+ Unit Name",
-                    'type': MULTCHOICE,
-                    'required': True,
-                    'help': "Select the name of the unit in the QATrack+ database",
-                    'choices': 'get_qatrack_unit_choices',
-                },
-                {
-                    'name': 'source',
-                    'type': DIRECTORY,
-                    'required': True,
-                    'help': "Enter the root directory you want to read files from.",
-                },
-                {
-                    'name': 'destination',
-                    'type': DIRECTORY,
-                    'required': True,
-                    'help': (
-                        "Enter the target directory that you want to move files to after they are uploaded. "
-                        "(Leave blank if you don't want the files to be moved)"
-                    ),
-                },
-            ],
-        },
-    ]
+    FILE_TYPE_CONFIGS = {
+        'name': 'File Types',
+        'fields': [
+            {
+                'name': 'recursive',
+                'type': BOOLEAN,
+                'required': True,
+                'default': False,
+                'help': "Should files from subdirectories be included?",
+            },
+            {
+                'name': 'pattern',
+                'type': STRING,
+                'required': True,
+                'default': "*",
+                'help': (
+                    "Enter a file globbing pattern (e.g. 'some-name-*.txt') to only "
+                    "include certain files. Use '*' to include all files."
+                ),
+            },
+            {
+                'name': 'ignore pattern',
+                'type': STRING,
+                'required': True,
+                'default': "",
+                'help': (
+                    "Enter a file globbing pattern (e.g. 'some-name-*.txt') to ignore "
+                    "certain files. Leave blank to not exclude any files."
+                ),
+            },
+        ],
+    }
+
+    DIRECTORY_CONFIG = {
+        'name': 'Directories',
+        'multiple': True,
+        'validation': 'validate_source_dest',
+        'dependencies': ["QATrack+ API"],
+        'fields': [
+            {
+                'name': 'unit name',
+                'label': "QATrack+ Unit Name",
+                'type': MULTCHOICE,
+                'required': True,
+                'help': "Select the name of the unit in the QATrack+ database",
+                'choices': 'get_qatrack_unit_choices',
+            },
+            {
+                'name': 'source',
+                'type': DIRECTORY,
+                'required': True,
+                'help': "Enter the root directory you want to read files from.",
+            },
+            {
+                'name': 'destination',
+                'type': DIRECTORY,
+                'required': True,
+                'help': (
+                    "Enter the target directory that you want to move files to after they are uploaded. "
+                    "(Leave blank if you don't want the files to be moved)"
+                ),
+            },
+        ],
+    }
 
     def validate_source_dest(self, values):
         """Ensure that source and destination directories are set."""
@@ -123,15 +119,32 @@ class QATrackGenericTextFileUploader(QATrackFetchAndPostTextFile, BasePump):
         searcher_config = self.get_config_values("File Types")[0]
 
         records = []
+        self.move_to = {}
         for unit_dir in self.get_config_values("Directories"):
             path_searcher = searcher_config.copy()
             path_searcher.update(unit_dir)
 
-            paths = self.get_paths(path_searcher)
-            records.extend([(unit_dir['unit name'], p) for p in paths])
+            from_dir = path_searcher['source']
+            to_dir = path_searcher['destination']
 
-        import ipdb; ipdb.set_trace()  # yapf: disable  # noqa
+            paths = self.get_paths(path_searcher)
+            for path in paths:
+                move_to = Path(str(path).replace(from_dir, to_dir)) if to_dir else None
+                records.append((unit_dir['unit name'], path, move_to))
+
         return records
+
+    def post_process(self, record):
+        unit, path, move_to = record
+
+        try:
+            move_to.parent.mkdir(parents=True, exist_ok=True)
+            path.replace(move_to)
+            msg = f"Moved {path} to {move_to}"
+        except Exception as e:
+            msg = f"Failed to move {path} to {move_to}: {e}"
+
+        self.log_info(msg)
 
     def get_paths(self, mover):
         """Get a listing of all files in our source directory and filter them based on our config options"""
@@ -146,6 +159,7 @@ class QATrackGenericTextFileUploader(QATrackFetchAndPostTextFile, BasePump):
 
     def filter_paths(self, paths, ignore_pattern):
         """Filter out any paths that match our ignore pattern"""
+        paths = (p for p in paths if not p.is_dir())
         if ignore_pattern in ["", None]:
             return list(paths)
         return [p for p in paths if not p.match(f"*/{ignore_pattern}")]
@@ -156,15 +170,41 @@ class QATrackGenericTextFileUploader(QATrackFetchAndPostTextFile, BasePump):
 
     def qatrack_unit_for_record(self, record):
         """Accept a record to process and return a QATrack+ Unit name. Must be overridden in subclasses"""
-        unit, path = record
+        unit, path, move_to = record
         return unit
 
     def id_for_record(self, record):
-        unit, path = record
+        unit, path, move_to = record
         modified = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
         return f"QCPump/GenericTextFileUploader/{unit}/{modified}/{path.stem}"
 
     def slug_and_filename_for_record(self, record):
-        unit, path = record
+        unit, path, move_to = record
         slug = self.get_config_value("Test List", "slug")
         return slug, path.stem
+
+
+class QATrackGenericTextFileUploader(BaseQATrackGenericUploader, QATrackFetchAndPostTextFile, BasePump):
+
+    DISPLAY_NAME = "QATrack+ File Upload: Generic Text File"
+    HELP_URL = "https://qcpump.qatrackplus.com/en/stable/pumps/qatrack_file_upload.html"
+
+    CONFIG = [
+        QATrackFetchAndPostTextFile.QATRACK_API_CONFIG,
+        BaseQATrackGenericUploader.TEST_LIST_CONFIG,
+        BaseQATrackGenericUploader.FILE_TYPE_CONFIGS,
+        BaseQATrackGenericUploader.DIRECTORY_CONFIG,
+    ]
+
+
+class QATrackGenericBinaryFileUploader(BaseQATrackGenericUploader, QATrackFetchAndPostBinaryFile, BasePump):
+
+    DISPLAY_NAME = "QATrack+ File Upload: Generic Binary File"
+    HELP_URL = "https://qcpump.qatrackplus.com/en/stable/pumps/qatrack_file_upload.html"
+
+    CONFIG = [
+        QATrackFetchAndPostTextFile.QATRACK_API_CONFIG,
+        BaseQATrackGenericUploader.TEST_LIST_CONFIG,
+        BaseQATrackGenericUploader.FILE_TYPE_CONFIGS,
+        BaseQATrackGenericUploader.DIRECTORY_CONFIG,
+    ]

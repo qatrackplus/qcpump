@@ -266,7 +266,7 @@ class BaseDQA3:
         else:
             beam_type = "X"
 
-        dqa_wedge_type = (row['wedge_type']  or "").lower()
+        dqa_wedge_type = (row['wedge_type'] or "").lower()
         if dqa_wedge_type in ["dynamic", "edw"]:
             wedge_type = "EDW"
         elif dqa_wedge_type in ["none", ""]:
@@ -274,15 +274,13 @@ class BaseDQA3:
         else:
             wedge_type = "Static"
 
-        dqa_wedge_angle = str(row['wedge_angle']  or "").lower()
+        dqa_wedge_angle = str(row['wedge_angle'] or "").lower()
         if dqa_wedge_angle in ["0", "none"]:
             wedge_angle = ""
         else:
             wedge_angle = dqa_wedge_angle
 
         wedge_orient = str(row['wedge_orient'] or "")
-
-        energy = row['beam_energy']
 
         beam_params = {
             'device': row['device'],
