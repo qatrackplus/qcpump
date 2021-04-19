@@ -810,8 +810,13 @@ class BasePump(wx.Panel):
 
         self.state[config['name']]['subsections'][subsection_idx][field_idx]['value'] = value
 
+        if config['name'] == "Pump" and field['name'] == "active":
+            self.validate_all()
+            return
+
         levels = dependencies.generate_validation_level_subset(section, self.dependencies)
         self.add_levels_to_queue(levels)
+
 
     def make_validation_group_id(self):
         """Return a unique string to identify a validation group"""
@@ -820,13 +825,21 @@ class BasePump(wx.Panel):
     def run_grid_validators(self, group):
         group_id, levels = group
 
+        active = self.get_config_value("Pump", "active")
         # first display in UI that we are going to validate some grids
         for level in levels:
             for section in level:
                 grid = self.grids[section]
                 grid_id = grid.GetId()
-                self.grid_validation_state[grid_id] = None, "Currently validating..."
-                self.update_grid_validation_message(grid_id, None, "Currently validating...")
+                if active:
+                    self.grid_validation_state[grid_id] = None, "Currently validating..."
+                    self.update_grid_validation_message(grid_id, None, "Currently validating...")
+                else:
+                    self.grid_validation_state[grid_id] = None, "Please activate this pump to validate."
+                    self.update_grid_validation_message(grid_id, None, "Please activate this pump to validate.")
+
+        if not active:
+            return
 
         # Run all the validator threads in this parent thread so we can ignore
         # the results from validators which were started before the most recent
