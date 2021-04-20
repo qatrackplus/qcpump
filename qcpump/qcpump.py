@@ -57,6 +57,7 @@ class QCPumpUI(ui.VQCPumpUI):
         # do expensive intialization after show event
         self._init_finished = False
         self._show_completed = True
+        self._startup_pump_run = False
 
         # used to track when user has asked to stop pumping
         self.kill_event = threading.Event()
@@ -264,6 +265,7 @@ class QCPumpUI(ui.VQCPumpUI):
     def start_pumps(self):
         """Configs are all valid. Start the pumps!"""
         logger.debug("Starting pumps")
+        self.run_pumps.SetValue(True)
 
         # we don't want the user editing configuration data while pumping is occuring
         self.disable_pump_windows()
@@ -292,6 +294,19 @@ class QCPumpUI(ui.VQCPumpUI):
         else:
             self.status_bar.SetStatusText("Pumps will not run since there are no valid pumps")
             self.stop_pumps()
+
+    def pump_on_startup(self):
+        """runs after initializing"""
+
+        validation_running = False
+        for pump_window in self.pump_windows.values():
+            if pump_window.pump.active and not pump_window.pump.initial_validation_complete:
+                validation_running = True
+                break
+
+        if not validation_running and not self._startup_pump_run:
+            self._startup_pump_run = True
+            self.start_pumps()
 
     def stop_pumps(self):
         """Set the kill event and stop all pumps"""
@@ -410,6 +425,9 @@ class QCPumpUI(ui.VQCPumpUI):
             self.log("qcpump", logging.DEBUG, "Starting to load existing pumps")
             self.load_existing_pumps()
             self.log("qcpump", logging.DEBUG, "Completed load of existing pumps")
+
+        if settings.PUMP_ON_STARTUP and not self._startup_pump_run:
+            self.pump_on_startup()
 
 
 class StatusPanel(ui.VStatusPanel):

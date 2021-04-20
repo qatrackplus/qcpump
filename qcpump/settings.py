@@ -61,6 +61,8 @@ class Settings:
         "Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
     )
 
+    PUMP_ON_STARTUP = True
+
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
 
@@ -78,6 +80,7 @@ class Settings:
                         "DEBUG": False,
                         "PUMP_DIRECTORIES": [],
                         "DB_CONNECT_TIMEOUT": 3,
+                        "PUMP_ON_STARTUP": False,
                     }, indent=2))
             except Exception as e:
                 raise Exception("Unable to create settings file %s. Error was %s" % (self.fname, str(e)))

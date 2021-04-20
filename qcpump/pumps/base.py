@@ -265,6 +265,7 @@ class BasePump(wx.Panel):
         self.Bind(EVT_INDEPENDENT_CHOICES_COMPLETE, self.OnIndependentChoicesComplete)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
         self.configured = False
+        self.initial_validation_complete = False
 
     def configure(self, pump_type, name, state=None):
         """Configure this pump window.  If state is passed then those config
@@ -300,22 +301,8 @@ class BasePump(wx.Panel):
         # ensure the controls match the current state
         self.update_controls_from_state()
 
-        # list of lists of sections that need to to be validated. For example if we have
-        # self.validation_stacks = [
-        #     ['section 4', 'section 5'],
-        #     ['section 3', 'section 2'],
-        #     ['section1']
-        # ]
-        # then a thread would be created to validate section 1, once that was
-        # complete, then 2 threads to validate sections 2 & 3, and once those were complte
-        # finally 2 threads to validate section 4 & 5.  This order is based on which
-        # sections are dependent on the others
-        self.validation_stack = []
         self.validation_queue = Queue()
         self.most_recent_validation_group = {s: None for s in self.dependencies.keys()}
-
-        # the sections which currently have validation threads running (poppped off the validation_stack)
-        self.sections_currently_validating = set()
 
         # run validation based on initial state
         self.validate_all()
@@ -1014,6 +1001,9 @@ class BasePump(wx.Panel):
             self.update_grid_validation_message(sub_section_results[0]['grid_id'], valid, message)
             self.update_grid_status(sub_section_results[0]['section'])
 
+        if not self.initial_validation_complete:
+            self.initial_validation_complete = True
+
     def resize_grids(self):
         """Set the grid sizes so that no scrollbars are required"""
 
@@ -1108,8 +1098,10 @@ class BasePump(wx.Panel):
     def validate_all(self):
         """Validate all grids/sections"""
 
-        levels = copy.deepcopy(self.validation_levels)
-        self.add_levels_to_queue(levels)
+        active = self.get_config_value("Pump", "active")
+        if active:
+            levels = copy.deepcopy(self.validation_levels)
+            self.add_levels_to_queue(levels)
 
     def add_levels_to_queue(self, levels):
         group_id = self.make_validation_group_id()
