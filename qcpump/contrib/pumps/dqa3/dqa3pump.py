@@ -54,7 +54,7 @@ class BaseDQA3:
                 'type': STRING,
                 'required': True,
                 'help': "Enter a template for the name of the Test List you want to upload data to.",
-                'default': "Daily QA3 Results: {{ energy }}{{ beam_type }}{{ wedge_type }}{{ wedge_angle }}",
+                'default': "Daily QA3 Results: {{ beam_name }}",
             },
         ]
     }
@@ -97,10 +97,11 @@ class BaseDQA3:
 
     def validate_test_list(self, values):
         name = values['name'].replace(" ", "")
-        if "{{beam_type}}" not in name or "{{energy}}" not in name:
+        if not name:
             msg = (
-                "You must include template variables for energy & beam_type e.g. "
-                "'Daily QA3 Results: {{ energy }}{{ beam_type }}'"
+                'You must set a template for your test list name lookup. e.g:'
+                '\n"Daily QA3 Results: {{ beam_name }}" or '
+                '\n"Daily QA3 Results: {{ energy }}{{ beam_type }}{{ wedge_type }}{{ wedge_angle }}"'
             )
             return False, msg
         return True, "OK"
@@ -246,8 +247,13 @@ class BaseDQA3:
         # create enough ? placeholders for configured units
         units = list(self.unit_map.keys())
         unit_placeholders = ','.join(self.query_parameter for __ in units)
-        q = self.dqa3_trend_query.format(units=unit_placeholders)
-        return q, [self.min_date] + units
+        beam_types = self.get_included_beam_types()
+        beam_type_placeholders = ','.join(self.query_parameter for __ in beam_types)
+        q = self.dqa3_trend_query.format(units=unit_placeholders, beam_types=beam_type_placeholders)
+        return q, [self.min_date] + units + beam_types
+
+    def get_included_beam_types(self):
+        return ["Photon", "Electron", "FFF"]
 
     def test_list_for_record(self, record):
         beam_params = self.beam_params_for_row(record)
@@ -540,6 +546,14 @@ class BaseGroupedDQA3(BaseDQA3):
             return False, "You must set a test list name"
         return True, "OK"
 
+    def get_included_beam_types(self):
+        beam_types = self.get_config_value('DQA3Reader', 'beam types')
+        if beam_types.lower() == 'photon':
+            return ["Photon", "FFF"]
+        elif beam_types:
+            return ["Electron"]
+        return ["Photon", "FFF", "Electron"]
+
     def fetch_records(self):
         records = super().fetch_records()
         grouped = self.group_records(records)
@@ -718,6 +732,14 @@ class FirebirdGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
                         "written to disk before uploading grouped results"
                     ),
                 },
+                {
+                    'name': 'beam types',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'default': "All",
+                    'choices': ["All", "Photons", "Electrons"],
+                    'help': "Choose which type of beams to include",
+                },
             ],
         },
         QATrackFetchAndPost.QATRACK_API_CONFIG,
@@ -830,6 +852,14 @@ class AtlasGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
                         "Wait this many minutes for more results to be "
                         "written to disk before uploading grouped results"
                     ),
+                },
+                {
+                    'name': 'beam types',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'default': "All",
+                    'choices': ["All", "Photons", "Electrons"],
+                    'help': "Choose which type of beams to include",
                 },
             ],
         },

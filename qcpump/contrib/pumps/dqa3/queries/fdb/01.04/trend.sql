@@ -73,5 +73,7 @@ JOIN
 JOIN
     room room on room.ROOM_KEY = mach.ROOM_KEY
 WHERE
-    tr.measured_datetime >= ? AND mach.mach_key IN ({units})
+    tr.measured_datetime >= ?
+    AND mach.mach_key IN ({units})
+    AND template.beamtype IN ({beam_types})
 ORDER BY tr.data_key asc;

@@ -75,5 +75,7 @@ JOIN
 JOIN
 	Energy energy on template.EnergyId = energy.EnergyId
 WHERE
-    data.created >= ? AND mach.MachineId IN ({units})
+    data.created >= ?
+    AND mach.MachineId IN ({units})
+    AND energy.BEAMTYPE IN ({beam_types})
 ORDER BY data.created asc;

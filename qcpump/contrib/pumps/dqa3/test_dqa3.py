@@ -31,12 +31,12 @@ class TestDQA3:
         dqa3.get_config_value = mock.Mock(return_value=driver)
         assert dqa3.querier == querier
 
-    @pytest.mark.parametrize("name,valid_expected,msg_expected", [
-        ("", False, "must include"),
-        ("Foo {{ beam_type }} baz qux", False, "must include"),
-        ("Foo {{ energy } baz qux", False, "must include"),
-        ("Foo {{ beam_type }} {{ energy}}bar", True, "OK"),
-    ])
+    @pytest.mark.parametrize(
+        "name,valid_expected,msg_expected", [
+            ("", False, "must set a template"),
+            ("Foo {{ beam_type }} {{ energy}}bar", True, "OK"),
+        ]
+    )
     def test_validate_test_list(self, name, valid_expected, msg_expected):
         pump = dqa3pump.BaseDQA3()
         valid, msg = pump.validate_test_list({'name': name})
@@ -236,7 +236,7 @@ class TestDQA3:
                 q, params = pump.prepare_dqa3_query()
                 assert "data.created >= ?" in q
                 assert "mach.MachineId IN (?,?)" in q
-                assert params == [now, "dqa unit 1", "dqa unit 2"]
+                assert params == [now, "dqa unit 1", "dqa unit 2", "Photon", "Electron", "FFF"]
 
     @pytest.mark.parametrize("record,expected", [
         ({"beam_type": "FfF", "beam_energy": 6, 'wedge_type': "", "wedge_angle": "", 'wedge_orient': "", "device": "", "machine_name": "", "room_name": "", "beam_name": ""}, "DQA3: 6FFF"),
