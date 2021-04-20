@@ -548,9 +548,9 @@ class BaseGroupedDQA3(BaseDQA3):
 
     def get_included_beam_types(self):
         beam_types = self.get_config_value('DQA3Reader', 'beam types')
-        if beam_types.lower() == 'photon':
+        if "photon" in beam_types.lower():
             return ["Photon", "FFF"]
-        elif beam_types:
+        elif "electron" in beam_types.lower():
             return ["Electron"]
         return ["Photon", "FFF", "Electron"]
 
