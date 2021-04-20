@@ -1098,10 +1098,8 @@ class BasePump(wx.Panel):
     def validate_all(self):
         """Validate all grids/sections"""
 
-        active = self.get_config_value("Pump", "active")
-        if active:
-            levels = copy.deepcopy(self.validation_levels)
-            self.add_levels_to_queue(levels)
+        levels = copy.deepcopy(self.validation_levels)
+        self.add_levels_to_queue(levels)
 
     def add_levels_to_queue(self, levels):
         group_id = self.make_validation_group_id()
