@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pathlib import Path
 
@@ -175,7 +175,7 @@ class BaseQATrackGenericUploader:
 
     def id_for_record(self, record):
         unit, path, move_to = record
-        modified = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).isoformat()
+        modified = datetime.fromtimestamp(path.stat().st_mtime).isoformat()
         return f"QCPump/GenericTextFileUploader/{unit}/{modified}/{path.stem}"
 
     def slug_and_filename_for_record(self, record):
