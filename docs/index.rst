@@ -5,12 +5,12 @@ Welcome to QCPump's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   release_notes.rst
    install.rst
+   settings.rst
    operate.rst
    pumps/index.rst
-
    pumps/dev/developing.rst
-
 
 
 QC Pump Overview

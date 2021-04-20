@@ -1,18 +1,20 @@
 .. _pumps-developing:
 
+Pump Type Development
+=====================
 
-Preparation
-===========
+Tutorial
+--------
 
 Install QCPump
---------------
+..............
 
 Follow the :ref:`installation instructions <install>` and either install the
 precompiled executable version of QCPump using the Windows installer, or
 install QCPump from source
 
 Create a PumpType directory
----------------------------
+...........................
 
 Create a directory somewhere to contain your pump types.  I am going to use a
 directory in my home directory called `Pumps`:
@@ -20,7 +22,7 @@ directory in my home directory called `Pumps`:
 .. figure:: images/pump_directory.png
 
 
-Now, find your QCPump config file location file by launching QCPump and going
+Now, find your QCPump settings file location file by launching QCPump and going
 to File->About:
 
 .. figure:: images/config_file_loc.png
@@ -40,7 +42,7 @@ slashes `/` instead of back slashes `\\` !):
 
 
 Developing your own Pump Types
-==============================
+------------------------------
 
 To create your own PumpType you will need to create a subclass of
 `qcpump.pumps.base.BasePump` and, at a minimum, implement a `pump` method.
@@ -84,7 +86,7 @@ started on your journey.
 
 
 Adding Configuration Options To Your Pump
-=========================================
+-----------------------------------------
 
 Let's extend our Hello World Pump to log a message that can be customized by
 our users.
@@ -130,7 +132,7 @@ pump again and you should see it log your new custom message:
 
 
 Adding Validation To Your Pump
-==============================
+------------------------------
 
 QCPump allows you to do some data validation to ensure things are configured
 correctly. Modify your hello_world.py to add a validation method for our
@@ -215,10 +217,10 @@ For more information on writing QCPumps please see the information below.
 .. _dev-config:
 
 Config Options
-==============
+--------------
 
 Option Types
-------------
+............
 
 You can add options of type:
 
@@ -238,7 +240,7 @@ DIRECTORY
     A path to a directory
 
 Setting choices for Multiple Choice options
--------------------------------------------
+...........................................
 
 .. todo::  Choices Docs
 
@@ -246,37 +248,37 @@ Setting choices for Multiple Choice options
 .. _dev-validation:
 
 Validation
-----------
+..........
 
 .. todo:: Validation docs
 
 .. _dev-dependencies:
 
 Dependencies
-============
+------------
 
 .. todo::  Dependency Docs
 
 
 QATrack+ Mixins
-===============
+---------------
 
 QATrackAPIMixin
----------------
+...............
 
 .. todo:: QATrackAPIMixin docs
 
 QATrackFetchAndPost
--------------------
+...................
 
 .. todo:: QATrackFetchAndPost docs
 
 QATrackFetchAndPostTextFile
----------------------------
+...........................
 
 .. todo:: QATrackFetchAndPostTextFile docs
 
 QATrackFetchAndPostBinarFile
-----------------------------
+............................
 
 .. todo:: QATrackFetchAndPostBinaryFile docs

@@ -1,8 +1,6 @@
 .. _pump_type-dqa3-grouped:
 
 
-
-
 Daily QA3 Pumps: Multiple Beams Per Test List
 =============================================
 
@@ -19,10 +17,11 @@ test list per beam type to record your results, please see:
 
     There are two disadvantages to using the Multiple Beams Per Test List:
 
-    1. If you have many beams configured this will result in very long test lists
-    which can impact performance when uploading data, or reviewing data in QATrack+.
-    2. If you perform a measurement twice (e.g. take 2 6X measurements), only the 2nd
-    result will be included.
+    1. If you have many beams configured this will result in very long test
+       lists which can impact performance when uploading data, or reviewing
+       data in QATrack+.
+    2. If you perform a measurement twice (e.g. take 2 6X measurements), only
+       the 2nd result will be included.
 
 QCPump currently has the ability to retrieve data from the following Daily QA3
 data sources:
@@ -76,10 +75,10 @@ Configure Test Lists
     .. code-block::
 
         # create a test list in the db for photons
-        python manage.py runscript create_grouped_dqa3_testlist --script-args db "Daily QA3 Results" 6X 6FFF 10X 10FFF "6X EDW60" 6E 9E 12E 16E 20E
+        python manage.py runscript create_grouped_dqa3_testlist --script-args db "Daily QA3 Results: Photons" 6X 6FFF 10X 10FFF "6X EDW60"
 
         # or create a test pack 
-        python manage.py runscript create_grouped_dqa3_testlist --script-args testpack "Daily QA3 Results" 6X 6FFF 10X 10FFF "6X EDW60" 6E 9E 12E 16E 20E
+        python manage.py runscript create_grouped_dqa3_testlist --script-args testpack "Daily QA3 Results: Electrons" 6E 9E 12E 16E 20E
 
 
 QCPump requires QATrack+ to have a single Test List per unit configured to
@@ -89,7 +88,7 @@ attributes:
 Test List Name
     Enter the name of the test list you configured in QATrack+ to record your DQA3 results e.g.:
 
-        Daily QA3 Results
+        Daily QA3 Results: Photons
 
 
 When QCPump gathers data to post to QATrack+, it will convert the DQA3 test
@@ -285,8 +284,8 @@ Unit Name
 
 .. _pump_type-dqa3-fbd-grouped:
 
-DQA3: Firebird Individual Beams Pump Type
------------------------------------------
+DQA3: Firebird Multiple Beams Per Test List Pump Type
+-----------------------------------------------------
 
 Config options specific to Firebird DQA3 databases (01.03.00.00 & 01.04.00.00).
 
@@ -295,24 +294,50 @@ DQA3Reader
 
 Host
     Enter the host name of the Firebird database server you want to connect to
+
 Database
     Enter the path to the database file you want to connect to on the server.
     For example C:\Users\YourUserName\databases\Sncdata.fdb
+
 User
     Enter the username you want to use to connect to the database with
+
 Password
     Enter the password you want to use to connect to the database with
+
 Port
     Enter the port number that the Firebird Database server is listening on
+
 Driver
     Select the database driver you want to use. Use firebirdsql unless you 
     have a good reason not to.
+
 History Days
     Enter the number of prior days you want to look for data to import.  If you
     are importing historical data you may want to temporarily set this to a large
     number of days (i.e. to get the last years worth of data set History days to 365) but
     normally a small number of days should be used to minimize the number of records
     fetched.
+
+Results group time interval (min)
+    Enter the time interval (in minutes) for which results should be grouped
+    together.  That is to say, for Beam & Geometry checks how large of a time window
+    should be used to consider MPC results part of the same session.  This value
+    should be a little bit longer than the typical time it takes you to run all 
+
+Wait for results (min)
+    Wait this many minutes for more results to be written to disk before
+    uploading grouped results.  In order to ensure all results from an MPC
+    session, are written to disk, QCPump will wait this many minutes after the
+    most recent Results.csv file it finds for a given machine before uploading
+    results to QATrack+.
+
+Beam Types
+    Select which beam types (Photon, Electron, All) you want to include for
+    this pump.  It is a good idea to create separate pumps for electrons and
+    photons and corresponding test lists in QATrack+ for recording photon &
+    electron results seperately.  The Photon option will include FFF & wedged
+    beams.
 
 
 Creating a Read-Only User for QCPump
@@ -390,9 +415,8 @@ the `User` and `Password` settings described above.
 
 .. _pump_type-dqa3-atlas-grouped:
 
-DQA3: Atlas Individual Beams DQA3 Pump Type
--------------------------------------------
-
+DQA3: Atlas Multiple Beams Per Test List Pump Type
+--------------------------------------------------
 
 Config options specific to Atlas DQA3 databases (SQLServer).
 
@@ -401,23 +425,49 @@ DQA3Reader
 
 Host
     Enter the host name of the SQL Server database server you want to connect to
+
 Database
     Enter the name of the database you want to connect to on the server.
     For example 'atlas'
+
 User
     Enter the username you want to use to connect to the database with
+
 Password
     Enter the password you want to use to connect to the database with
+
 Port
     Enter the port number that the SQL Server database server is listening on
+
 Driver
     Select the database driver you want to use. On Windows you will typically
     want to use the `ODBC Driver 17 for SQL Server` driver (ensure you have
     this driver installed on the computer running QCPump!). On Linux you will
     likely want to use one of the TDS drivers.
+
 History Days
     Enter the number of prior days you want to look for data to import.  If you
     are importing historical data you may want to temporarily set this to a large
     number of days (i.e. to get the last years worth of data set History days to 365) but
     normally a small number of days should be used to minimize the number of records
     fetched.
+
+Results group time interval (min)
+    Enter the time interval (in minutes) for which results should be grouped
+    together.  That is to say, for Beam & Geometry checks how large of a time window
+    should be used to consider MPC results part of the same session.  This value
+    should be a little bit longer than the typical time it takes you to run all 
+
+Wait for results (min)
+    Wait this many minutes for more results to be written to disk before
+    uploading grouped results.  In order to ensure all results from an MPC
+    session, are written to disk, QCPump will wait this many minutes after the
+    most recent Results.csv file it finds for a given machine before uploading
+    results to QATrack+.
+
+Beam Types
+    Select which beam types (Photon, Electron, All) you want to include for
+    this pump.  It is a good idea to create separate pumps for electrons and
+    photons and corresponding test lists in QATrack+ for recording photon &
+    electron results seperately.  The Photon option will include FFF & wedged
+    beams.

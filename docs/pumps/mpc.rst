@@ -1,18 +1,17 @@
 .. _pump_type-mpc:
 
 
-.. note::
-
-    The DQA3 pumps are tested on QATrack+ v3.1. QCPump is not compatible with
-    QATrack v0.3.X
-
-
 Varian MPC Pumps
 ================
 
 .. contents:: Contents
    :depth: 2
 
+
+.. note::
+
+    The DQA3 pumps are tested on QATrack+ v3.1. QCPump is not compatible with
+    QATrack v0.3.X
 
 Varian's automated Machine Performance Check (MPC) stores its results in CSV
 files on disk which makes it easy to review those results using third party

@@ -1,8 +1,6 @@
 .. _pump_type-dqa3:
 
 
-
-
 Daily QA3 Pumps: One Beam Per Test List
 =======================================
 
@@ -86,6 +84,8 @@ QCPump requires QATrack+ to have a Test List configured for each beam type you
 want to upload results for.  For example, if on your linacs you use 6X, 6FFF,
 10X, 10FFF, 15X, 6E, 9E, 12E, 16E, 20E beams you will need 10 total test lists
 for DQA3 results.  The Test List must have a specific set of attributes:
+
+.. _pump_type-dqa3-test-list:
 
 Test List Name
 
