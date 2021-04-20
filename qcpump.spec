@@ -1,6 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-import glob
-from pathlib import Path
 
 block_cipher = None
 
@@ -22,6 +20,7 @@ hidden_imports = [
     # third party
     "jinja2",
     "requests",
+    "PyPAC",
     "fdb",
     "firebirdsql",
     "pyodbc",

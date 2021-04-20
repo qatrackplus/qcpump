@@ -10,6 +10,9 @@ docs:
 docs-autobuild:
 	sphinx-autobuild docs docs/_build/html --port 8009
 
+pyinstaller:
+	pyinstaller .\qcpump.spec
 
-.PHONY: docs-autobuild docs cover cover-module
+
+.PHONY: docs-autobuild docs cover cover-module pyinstaller
 
