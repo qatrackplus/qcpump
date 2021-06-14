@@ -1,6 +1,7 @@
 from pathlib import Path
+import shutil
 
-from qcpump.pumps.base import BOOLEAN, DIRECTORY, STRING, BasePump
+from qcpump.pumps.base import BOOLEAN, DIRECTORY, MULTCHOICE, STRING, BasePump
 
 
 class SimpleFileMover(BasePump):
@@ -26,6 +27,14 @@ class SimpleFileMover(BasePump):
                     'type': DIRECTORY,
                     'required': True,
                     'help': "Enter the target directory that you want to move files to.",
+                },
+                {
+                    'name': 'mode',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select whether you want to move or copy the files",
+                    'default': 'Move',
+                    'choices': ['Move', 'Copy'],
                 },
             ],
         },
@@ -54,7 +63,10 @@ class SimpleFileMover(BasePump):
             paths = list(Path(mover['source']).glob("*"))
             to_dir = Path(mover['destination'])
 
-            self.log_info(f"Found {len(paths)} files to move.")
+            mode = mover['mode']
+            action = "Moved" if mode == "Move" else "Copied"
+
+            self.log_info(f"Found {len(paths)} files to {mode.lower()}.")
             for f in paths:
 
                 # your pumps should always periodically check whether they
@@ -65,10 +77,13 @@ class SimpleFileMover(BasePump):
 
                 try:
                     dest = to_dir / f.name
-                    f.replace(dest)
-                    msg = f"Moved {f} to {to_dir / f.name}"
+                    if mode == "Copy":
+                        shutil.copy(f, dest)
+                    else:
+                        f.replace(dest)
+                    msg = f"{action} {f} to {to_dir / f.name}"
                 except Exception:
-                    msg = f"Failed to move {f} to {to_dir / f.name}"
+                    msg = f"Failed to {mode} {f} to {to_dir / f.name}"
 
                 self.log_info(msg)
                 moved.append(msg)
@@ -105,6 +120,14 @@ class FileMover(BasePump):
                     'type': DIRECTORY,
                     'required': True,
                     'help': "Enter the target directory that you want to move files to.",
+                },
+                {
+                    'name': 'mode',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select whether you want to move or copy the files",
+                    'default': 'Move',
+                    'choices': ['Move', 'Copy'],
                 },
                 {
                     'name': 'recursive',
@@ -161,6 +184,9 @@ class FileMover(BasePump):
 
             to_dir = Path(mover['destination'])
 
+            mode = mover['mode']
+            action = "Moved" if mode == "Move" else "Copied"
+
             self.log_info(f"Found {len(paths)} files to move.")
             for f in paths:
 
@@ -171,10 +197,13 @@ class FileMover(BasePump):
 
                 try:
                     dest = to_dir / f.name
-                    f.replace(dest)
-                    msg = f"Moved {f} to {to_dir / f.name}"
+                    if mode == "Copy":
+                        shutil.copy(f, dest)
+                    else:
+                        f.replace(dest)
+                    msg = f"{action} {f} to {to_dir / f.name}"
                 except Exception:
-                    msg = f"Failed to move {f} to {to_dir / f.name}"
+                    msg = f"Failed to {mode} {f} to {to_dir / f.name}"
 
                 self.log_info(msg)
                 moved.append(msg)

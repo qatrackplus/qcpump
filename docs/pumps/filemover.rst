@@ -36,6 +36,9 @@ Source
 Destination:
     The directory to move files to
 
+Mode:
+    Choose whether files should be moved, or copied
+
 .. figure:: images/filemover/simple.png
     :alt: QCPump Simple File Mover
 
@@ -69,6 +72,9 @@ Source
 
 Destination
     The directory to move files to
+
+Mode:
+    Choose whether files should be moved, or copied
 
 Recursive
     Set to `True` to have the file mover look through all subdirectories of the
