@@ -10,6 +10,7 @@ requirements = [
     "pytest-coverage",
     "pytest-sugar",
     "pytest<6.3.2",
+    "python-certifi-win32<1.7",
     "requests[socks]<2.26.0",
     "toposort<1.7.0",
     "wxPython<4.2.0",
