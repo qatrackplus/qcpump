@@ -18,13 +18,16 @@ hidden_imports = [
     "qcpump.pumps.common.qatrack",
 
     # third party
+    "certifi",
     "jinja2",
     "requests",
-    "PyPAC",
-    "python-certifi-win32",
+    "pypac",
+    "certifi_win32",
+    "win32",
     "fdb",
     "firebirdsql",
     "pyodbc",
+    "wrapt",
 ]
 
 a = Analysis(  # noqa: F821
@@ -34,7 +37,7 @@ a = Analysis(  # noqa: F821
     datas=data_files,
     hiddenimports=hidden_imports,
     hookspath=[],
-    runtime_hooks=[],
+    runtime_hooks=["patch_certs.py"],
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
