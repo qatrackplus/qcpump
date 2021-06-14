@@ -18,10 +18,10 @@ hidden_imports = [
     "qcpump.pumps.common.qatrack",
 
     # third party
-    "python-certifi-win32<1.7",
     "jinja2",
     "requests",
     "PyPAC",
+    "python-certifi-win32",
     "fdb",
     "firebirdsql",
     "pyodbc",

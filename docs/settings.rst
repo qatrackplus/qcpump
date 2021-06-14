@@ -46,6 +46,8 @@ PUMP_DIRECTORIES (list of file paths or null)
     Set to list of other directories to include user defined pump types from.
     See :ref:`pumps-developing`.
 
+.. _qcpump-settings-startup:
+
 PUMP_ON_STARTUP (`true`, `false`)
     Should QCPump immediately start pumping when it is launched.  This is useful
     for e.g. adding QCPump to a startup folder so it launches when a machine is rebooted

@@ -3,6 +3,19 @@
 Release Notes
 =============
 
+v0.3.1
+------
+
+* The File Mover pump types can now be set to `Copy` mode to have source files
+  copied to the destination directory rather than moved
+
+* The Python package `python-certifi-win32` has been added so that requests
+  can use the Windows Certificate Store for SSL verification rather than using
+  its bundled certificate chain.  This should resolve some issues users were
+  having with firewalls & network monitoring software.
+
+* Added a missing permission for the DQA3 QCPump Firebird user
+
 v0.3.0
 ------
 

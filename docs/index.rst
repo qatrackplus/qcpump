@@ -10,6 +10,7 @@ Welcome to QCPump's documentation!
    settings.rst
    operate.rst
    pumps/index.rst
+   dev.rst
    pumps/dev/developing.rst
 
 

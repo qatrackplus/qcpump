@@ -11,6 +11,15 @@ After you've configured and :ref:`saved at least one Pump <pumps-save>` you can
 run all active pumps by clicking the `Run Pumps` toggle button at the top of the
 QCPump window.  
 
+Running pumps automatically on launch
+.....................................
+
+If you want your Pumps to start pumping automatically when they launch, set the
+:ref:`PUMP_ON_STARTUP <qcpump-settings-startup>` to `True`.  This allows you to
+have `QCPump launch automatically at Windows Startup
+<https://support.microsoft.com/en-us/windows/change-which-apps-run-automatically-at-startup-in-windows-10-9115d841-735e-488d-e749-9ba301d441e6>`_
+and start pumping without user intervention.
+
 Stopping your Pumps
 --------------------
 
