@@ -61,7 +61,7 @@ class Settings:
         "Chrome/70.0.3538.102 Safari/537.36 Edge/18.19582"
     )
 
-    PUMP_ON_STARTUP = True
+    PUMP_ON_STARTUP = False
 
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
