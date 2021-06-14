@@ -399,6 +399,7 @@ then grant your user select rights on the tables required:
         GRANT SELECT ON dqa3_calibration to USER qcpump;
         GRANT SELECT ON dqa3_template to USER qcpump;
         GRANT SELECT ON dqa3_machine to USER qcpump;
+        GRANT SELECT ON room to USER qcpump;
         quit;
 
 

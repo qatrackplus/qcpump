@@ -8,3 +8,4 @@ GRANT SELECT ON device to USER qcpump;
 GRANT SELECT ON dqa3_calibration to USER qcpump;
 GRANT SELECT ON dqa3_template to USER qcpump;
 GRANT SELECT ON dqa3_machine to USER qcpump;
+GRANT SELECT ON room to USER qcpump;
