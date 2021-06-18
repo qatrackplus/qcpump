@@ -5,4 +5,5 @@ dist
 build
 docs/_build
 env
+dbs
 Thumbs.db*

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "QCPump"
-#define MyAppVersion "0.3.1"
+#define MyAppVersion "0.3.2"
 #define MyAppPublisher "QATrack+ Project"
 #define MyAppURL "http://qatrackplus.com"
 #define MyAppExeName "qcpump.exe"

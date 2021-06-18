@@ -3,6 +3,11 @@
 Release Notes
 =============
 
+v0.3.2
+------
+
+* Handle non-missing test 400 Bad Requests when uploading to QATrack+
+
 v0.3.1
 ------
 
