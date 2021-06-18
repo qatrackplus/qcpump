@@ -70,6 +70,13 @@ def get_logger(name):
         stdout_handler.setFormatter(formatter)
         logger.addHandler(stdout_handler)
 
+    if app_log_level == logging.DEBUG:
+        import http.client
+        http.client.HTTPConnection.debuglevel = 1
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(app_log_level)
+        requests_log.propagate = True
+
     return logger
 
 

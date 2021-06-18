@@ -3,6 +3,7 @@ import datetime
 import json
 import re
 import time
+import traceback
 import unicodedata
 
 from pypac import PACSession
@@ -431,13 +432,18 @@ class QATrackFetchAndPost(QATrackAPIMixin):
         try:
             data = json.dumps(payload, cls=QCPumpJSONEncoder)
             res = session.post(tli_url, data=data)
+            response_payload = res.json()
+            non_field_errors = response_payload.get('non_field_errors', [])
+            bad_request = res.status_code == HTTP_BAD_REQUEST
             do_autoskip = (
                 self.autoskip and
-                res.status_code == HTTP_BAD_REQUEST and
-                any(MISSING_TEST_DATA_ERR in err.lower() for err in res.json()['non_field_errors'])
+                bad_request and
+                any(MISSING_TEST_DATA_ERR in err.lower() for err in non_field_errors)
             )
-            if do_autoskip:
-                for err in res.json()['non_field_errors']:
+            if bad_request and not non_field_errors:
+                self.log_warning(f"Upload failed with HTTP_BAD_REQUEST: {response_payload}")
+            elif do_autoskip:
+                for err in non_field_errors:
                     if MISSING_TEST_DATA_ERR not in err.lower():
                         continue
                     missing_tests = [t.strip() for t in err.split(":")[-1].split(",")]
@@ -453,8 +459,9 @@ class QATrackFetchAndPost(QATrackAPIMixin):
                 res = session.post(tli_url, data=data)
 
             return res
-        except Exception as e:
-            self.log_critical(f"Posting data to QATrack+ API failed: {e}")
+        except Exception:
+            msg = traceback.format_exc()
+            self.log_critical(f"Posting data to QATrack+ API failed: {msg}")
 
 
 class QATrackFetchAndPostTextFile(QATrackFetchAndPost):
