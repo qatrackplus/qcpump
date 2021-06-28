@@ -145,7 +145,7 @@ class LogGrid(wx.grid.Grid):
 
         nrows = self.GetNumberRows()
         if nrows > self.max_rows:
-            self.DeleteRows(pos=0, numRows=1)
+            self.DeleteRows(pos=nrows-1, numRows=1)
 
         date = datetime.datetime.now()
         level_display = self.LOG_LEVEL_DISPLAY[level]
