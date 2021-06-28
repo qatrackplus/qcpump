@@ -3,6 +3,13 @@
 Release Notes
 =============
 
+v0.3.3
+------
+
+* Fix stdio redirect
+* Fix logging window history
+* Add more json decoding errors
+
 v0.3.2
 ------
 

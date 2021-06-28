@@ -16,7 +16,7 @@ requirements = [
     "wxPython<4.2.0",
 ]
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 
 setup(

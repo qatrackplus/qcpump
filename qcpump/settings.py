@@ -43,7 +43,7 @@ class Settings:
     LOG_LEVEL = "info"  # debug | info | warning | error | critical
     LOG_TO_CONSOLE = False  # should logs be written to console as well as log files?
 
-    VERSION = "v0.3.2"  # current QCPump version
+    VERSION = "v0.3.3"  # current QCPump version
     VENDOR = "QATrack Project"
     APPNAME = "qcpump"
 

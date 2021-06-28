@@ -659,8 +659,9 @@ def main():
         wx.MessageBox(f"Fatal Error: {msg}", style=wx.ICON_ERROR, caption="Unable to launch.")
         return
 
-    stdio = logs.get_log_location("stdio")
-    app.RedirectStdio(stdio)
+    if not settings.DEBUG:
+        stdio = logs.get_log_location("stdio")
+        app.RedirectStdio(stdio)
 
     try:
         app.MainLoop()

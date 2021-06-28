@@ -231,7 +231,8 @@ class QATrackAPIMixin:
                 )
 
         except Exception:
-            pass
+            msg = traceback.format_exc()
+            self.log_critical(f"Fetching data from QATrack+ API failed: {msg}")
 
         if attribute:
             results.sort()
@@ -335,8 +336,9 @@ class QATrackFetchAndPost(QATrackAPIMixin):
         try:
             resp = session.get(url, params={'user_key': record_id})
             return resp.json()['count'] >= 1
-        except Exception as e:
-            self.log_debug(f"Querying API for duplicates failed: {e}")
+        except Exception:
+            msg = traceback.format_exc()
+            self.log_critical(f"Querying API for duplicates failed: {msg}")
             return False
 
     def _generate_payload(self, record):
@@ -406,7 +408,11 @@ class QATrackFetchAndPost(QATrackAPIMixin):
             self.log_info(f"Calling {utc_url} with params={params} failed")
             return
 
-        results = resp.json()
+        try:
+            results = resp.json()
+        except json.JSONDecodeError:
+            self.log_error(f"Fetching url for {params} successful but no JSON data in response")
+            return None
 
         if results['count'] > 1:
             self.log_critical(
