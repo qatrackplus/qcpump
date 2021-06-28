@@ -627,7 +627,7 @@ def main():
 
     app = wx.App(
         useBestVisual=True,
-        redirect=False,  # leave as False.  stderr/stdout will be redirected below when not in debug mode
+        redirect=False,  # leave as False.  stderr/stdout will be redirected below
         clearSigInt=True,  # set to True to allow a Ctrl+C to kill app
     )
 
@@ -659,9 +659,8 @@ def main():
         wx.MessageBox(f"Fatal Error: {msg}", style=wx.ICON_ERROR, caption="Unable to launch.")
         return
 
-    # everything started up ok let's go!
-    if not settings.DEBUG:
-        app.RedirectStdio()
+    stdio = logs.get_log_location("stdio")
+    app.RedirectStdio(stdio)
 
     try:
         app.MainLoop()
