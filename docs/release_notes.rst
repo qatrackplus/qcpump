@@ -3,6 +3,11 @@
 Release Notes
 =============
 
+v0.3.4
+------
+
+* Attempt to correct path for cacert.pem when running in pyinstaller
+
 v0.3.3
 ------
 

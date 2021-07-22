@@ -7,7 +7,8 @@ pytest==6.2.2
 pytest-coverage
 pytest-sugar==0.9.4
 PyPAC==0.15.0
-python-certifi-win32==1.6
+#python-certifi-win32==1.6
+-e git+https://github.com/qatrackplus/python-certifi-win32@8b52865345cada85ba471eb7021ce2559a93e0d1#egg=python_certifi_win32
 pywin32==301; sys.platform == 'win32'
 requests[socks]==2.25.1
 toposort==1.6
