@@ -1,6 +1,8 @@
 """QCPump main entry point"""
+import sys
 
-import patch_certs
+if 'win' in  sys.platform.lower():
+    import patch_certs
 import qcpump
 
 qcpump.main()
