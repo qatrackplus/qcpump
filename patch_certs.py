@@ -17,10 +17,11 @@ def wrap_certifi_pem():
     """Adapted from certifi_win32.wincerts"""
     logger.debug(f"CERTIFI_PEM pre patch {certifi_win32.wincerts.CERTIFI_PEM}")
     if not certifi_win32.wincerts.CERTIFI_PEM or not os.path.exists(certifi_win32.wincerts.CERTIFI_PEM):
-        import certifi
-        certifi_win32.wincerts.CERTIFI_PEM = os.path.join(root, "certifi", "cacert.pem")
+        import certifi  # noqa: F401
+        certifi_win32.wincerts.CERTIFI_PEM = os.path.join(root, "qcpump", "certifi", "cacert.pem")
         logger.debug(f"CERTIFI_PEM post patch {certifi_win32.wincerts.CERTIFI_PEM}")
         if not os.path.exists(certifi_win32.wincerts.CERTIFI_PEM):
+            logger.debug("Cannot find certifi cacert.pem")
             raise ValueError("Cannot find certifi cacert.pem")
     logger.debug(f"using CERTIFI_PEM {certifi_win32.wincerts.CERTIFI_PEM}")
     return certifi_win32.wincerts.CERTIFI_PEM
@@ -29,8 +30,12 @@ def wrap_certifi_pem():
 logger.debug(f"Frozen: {frozen} Windows: {'win' in sys.platform.lower()}")
 if frozen and 'win' in sys.platform.lower():
     certifi_win32.wincerts.certifi_pem = wrap_certifi_pem
-    wrap_certifi_pem()
+    try:
+        wrap_certifi_pem()
+    except Exception:
+        logger.exception()
 
+logger.debug("post wrap")
 try:
 
     # patch certifi.where so it uses the Windows cert store
@@ -47,8 +52,8 @@ try:
     # Wrap the certify.where function
     wrapt.wrap_function_wrapper(certifi, 'where', wrap_where)
 
-except Exception as e:
-    print(str(e))
+except Exception:
+    logger.exception()
     raise
 
 import requests  # noqa: E402
