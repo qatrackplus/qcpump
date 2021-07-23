@@ -3,7 +3,7 @@
 Release Notes
 =============
 
-v0.3.4
+v0.3.5
 ------
 
 * Ensure ssl certificate files are found / installed by pyinstaller
@@ -11,6 +11,11 @@ v0.3.4
   configs and logs so that multiple users can use same configuration. It is
   recommended that you "Install for All Users" when installing QCPump.
 * Instructions for starting QCPump automatically have been added.
+
+v0.3.4
+------
+
+* retracted
 
 v0.3.3
 ------
