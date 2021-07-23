@@ -16,7 +16,7 @@ from qcpump.pumps.base import (
     EVT_PUMP_PROGRESS,
 )
 from qcpump.pumps.registry import get_pump_types, register_pump_types
-from qcpump.settings import Settings, get_config_dir
+from qcpump.settings import Settings, get_config_dir, get_settings_file_path
 import qcpump.ui as ui
 
 settings = Settings()
@@ -48,6 +48,8 @@ class QCPumpUI(ui.VQCPumpUI):
         self.SetMinSize((1024, 768))
         self.Fit()
         self.Center()
+
+        self.do_pump_on_startup.SetValue(settings.PUMP_ON_STARTUP)
 
         self.pump_windows = {}
 
@@ -352,6 +354,14 @@ class QCPumpUI(ui.VQCPumpUI):
     def get_dirty_pumps(self):
         """Return any pump window which has a non-saved (dirty) state"""
         return [pw.name for pw in self.pump_windows.values() if pw.pump.dirty]
+
+    def OnPumpOnStartup(self, evt):
+        settings_path = get_settings_file_path()
+        with settings_path.open('r') as f:
+            data = json.load(f)
+        data['PUMP_ON_STARTUP'] = self.do_pump_on_startup.IsChecked()
+        with settings_path.open("w") as f:
+            json.dump(data, f, indent=4)
 
     def OnRunPumpsToggle(self, evt):
         """User manually toggled the run pumps button"""

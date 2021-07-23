@@ -31,6 +31,11 @@ class VQCPumpUI ( wx.Frame ):
 
 		bSizer4.Add( ( 0, 0), 1, wx.EXPAND, 5 )
 
+		self.do_pump_on_startup = wx.CheckBox( self.main_panel, wx.ID_ANY, u"Run Pumps On Launch", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.do_pump_on_startup.SetToolTip( u"Check this to automatically start pumps when QCPump is launched" )
+
+		bSizer4.Add( self.do_pump_on_startup, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
 		self.add_pump = wx.Button( self.main_panel, wx.ID_ANY, u"Add Pump", wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		self.add_pump.SetBitmap( wx.NullBitmap )
@@ -81,8 +86,8 @@ class VQCPumpUI ( wx.Frame ):
 		self.Bind( wx.EVT_ACTIVATE_APP, self.OnActivateApp )
 		self.Bind( wx.EVT_CLOSE, self.OnClose )
 		self.Bind( wx.EVT_IDLE, self.OnIdle )
-		self.Bind( wx.EVT_PAINT, self.OnPaint )
 		self.Bind( wx.EVT_SHOW, self.OnShow )
+		self.do_pump_on_startup.Bind( wx.EVT_CHECKBOX, self.OnPumpOnStartup )
 		self.add_pump.Bind( wx.EVT_BUTTON, self.OnAddPump )
 		self.run_pumps.Bind( wx.EVT_TOGGLEBUTTON, self.OnRunPumpsToggle )
 		self.Bind( wx.EVT_MENU, self.OnAbout, id = self.about.GetId() )
@@ -105,10 +110,10 @@ class VQCPumpUI ( wx.Frame ):
 	def OnIdle( self, event ):
 		event.Skip()
 
-	def OnPaint( self, event ):
+	def OnShow( self, event ):
 		event.Skip()
 
-	def OnShow( self, event ):
+	def OnPumpOnStartup( self, event ):
 		event.Skip()
 
 	def OnAddPump( self, event ):

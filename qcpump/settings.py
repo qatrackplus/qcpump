@@ -44,6 +44,10 @@ def get_config_dir(with_version=False):
         return Path(conf_rootf(Settings.APPNAME, Settings.VENDOR))
 
 
+def get_settings_file_path():
+    return get_config_dir() / "settings.json"
+
+
 class Settings:
     """A class to hold QCPump Application settings.  Default settings can be
     overridden using a settings.json file"""
@@ -80,8 +84,8 @@ class Settings:
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
 
-        settings_dir = get_config_dir()
-        self.fname = settings_dir / "settings.json"
+        self.fname = get_settings_file_path()
+        settings_dir = self.fname.parent
         if not self.fname.parent.exists():
             old_settings_dir = Path(appdirs.user_config_dir(Settings.APPNAME, Settings.VENDOR))
             if old_settings_dir.exists():
