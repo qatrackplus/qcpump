@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import shutil
 
 import appdirs
 
@@ -28,6 +29,19 @@ def resource_path(relative_path):
     if frozen:
         return os.path.join(root, "qcpump", relative_path)
     return os.path.join(root, relative_path)
+
+
+def get_config_dir(with_version=False):
+    """Return a Path object corresponding to the directory where program data files are stored"""
+    if 'win' in sys.platform.lower():
+        conf_rootf = appdirs.site_config_dir
+    else:
+        conf_rootf = appdirs.user_config_dir
+
+    if with_version:
+        return Path(conf_rootf(Settings.APPNAME, Settings.VENDOR, version=Settings.VERSION))
+    else:
+        return Path(conf_rootf(Settings.APPNAME, Settings.VENDOR))
 
 
 class Settings:
@@ -66,10 +80,17 @@ class Settings:
     def __init__(self):
         """Load settings.json file and override any settings defined in it"""
 
-        settings_dir = Path(appdirs.user_config_dir(Settings.APPNAME, Settings.VENDOR))
+        settings_dir = get_config_dir()
         self.fname = settings_dir / "settings.json"
         if not self.fname.parent.exists():
-            self.fname.parent.mkdir(parents=True, exist_ok=True)
+            old_settings_dir = Path(appdirs.user_config_dir(Settings.APPNAME, Settings.VENDOR))
+            if old_settings_dir.exists():
+                if sys.version_info < (3, 8):
+                    shutil.copytree(old_settings_dir, settings_dir)
+                else:
+                    shutil.copytree(old_settings_dir, settings_dir, dirs_exist_ok=True)
+            else:
+                self.fname.parent.mkdir(parents=True, exist_ok=True)
 
         # if the settings.json file doesn't exist, create it and stick an empty json doc in it
         if not os.path.exists(self.fname):

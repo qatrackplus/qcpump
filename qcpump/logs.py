@@ -1,14 +1,12 @@
 import datetime
 import logging
 import logging.handlers
-from pathlib import Path
 import sys
 
-import appdirs
 import wx
 
 from qcpump import utils
-from qcpump.settings import Settings
+from qcpump.settings import Settings, get_config_dir
 
 formatter = logging.Formatter('%(asctime)s,%(name)s,%(levelname)s,%(message)s')
 
@@ -34,7 +32,7 @@ def get_log_level(level_display=None):
 
 def get_log_dir():
     """Return a Path object corresponding to the directory where log files are stored"""
-    return Path(appdirs.user_log_dir(Settings.APPNAME, Settings.VENDOR, version=Settings.VERSION))
+    return get_config_dir() / "logs"
 
 
 def get_log_location(name):

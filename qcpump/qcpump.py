@@ -1,11 +1,8 @@
 import json
 import logging
-import os
-from pathlib import Path
 import sys
 import threading
 
-import appdirs
 import wx
 import wx.adv
 import wx.grid
@@ -19,7 +16,7 @@ from qcpump.pumps.base import (
     EVT_PUMP_PROGRESS,
 )
 from qcpump.pumps.registry import get_pump_types, register_pump_types
-from qcpump.settings import Settings
+from qcpump.settings import Settings, get_config_dir
 import qcpump.ui as ui
 
 settings = Settings()
@@ -219,8 +216,7 @@ class QCPumpUI(ui.VQCPumpUI):
 
     def get_pump_config_dir(self):
         """Return the user directory used for saving pump configuration data"""
-        pumps_dir = os.path.join(Settings.APPNAME, "pumps")
-        return Path(appdirs.user_config_dir(pumps_dir, Settings.VENDOR))
+        return get_config_dir() / "pumps"
 
     def get_pump_config_path(self, name):
         """Return the path of a specific pumps config file. If the file doesn't
