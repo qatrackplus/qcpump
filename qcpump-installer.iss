@@ -2,8 +2,16 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "QCPump"
+
+; MyAppNameLower must match Settings.APPNAME
+#define MyAppNameLower "qcpump"
+
 #define MyAppVersion "0.3.4"
 #define MyAppPublisher "QATrack+ Project"
+
+; below must match Settings.VENDOR
+#define MyProgramDataRoot "QATrack Project"
+
 #define MyAppURL "http://qatrackplus.com"
 #define MyAppExeName "qcpump.exe"
 
@@ -37,6 +45,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+[Dirs]
+Name: {commonappdata}\{#MyProgramDataRoot}\{#MyAppNameLower}; Permissions: users-modify
 
 [Files]
 Source: "dist\qcpump\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion

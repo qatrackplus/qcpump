@@ -2,6 +2,8 @@
 
 block_cipher = None
 
+pem_path = os.path.join(os.environ['LOCALAPPDATA'], '.certifi', 'cacert.pem')
+
 data_files = [
     # add icons etc
     ("LICENSE", "."),
@@ -9,6 +11,7 @@ data_files = [
     ("qcpump/resources/", "resources"),
     # add pumps
     ("qcpump/contrib/pumps/", "contrib/pumps"),
+    (pem_path, ".certifi/cacert.pem"),
 ]
 
 hidden_imports = [

@@ -11,8 +11,92 @@ Installing with the Windows Installer
 
 On Windows platforms please download the `QCPump Installer
 <https://github.com/qatrackplus/qcpump/raw/master/installer/qcpump-setup-0.3.4.exe>`_.
-Download and run the installer following the prompts, then go to the
-:ref:`pumps-configure-new` page to start configuring some *Pumps*.
+Download and run the installer following the prompts.  You may choose to
+install for the current user only, or all users on this system.  
+
+.. figure:: images/install_for_users.png
+    :alt: QCPump: Choose whether to install for all users or just the current user.
+
+    QCPump: Choose whether to install for all users or just the current user.
+
+
+
+Installing for All Users requires administrator privileges while installing for
+only the current user should be possible regardless of user type.  Please note
+that either way you install, the pump configuration will be shared across all
+users regardless of whether you install for the current user or all users.
+
+After Installing
+................
+
+Now that QCPump is installed, go to the :ref:`pumps-configure-new` page to
+start configuring some *Pumps*.  After that you may want to see the following
+section on starting QCPump automatically.
+
+
+Starting QCPump Automatically
+.............................
+
+If you want want to have QCPump start up automatically when a user logins you
+can do so by adding QCPump your startup folder.  
+
+First create a shortcut to QCPump on the desktop by right clicking on the desktop and
+selecting "New -> Shortcut":
+
+.. figure:: images/desktop_shortcut.png
+    :alt: QCPump: Create a desktop shortcut for QCPump
+
+    QCPump: Create a desktop shortcut for QCPump
+
+
+and select the QCPump application (usually located at
+`C:\\Users\\YOURUSERNAME\\AppData\\Local\\Programs\\QCPump\\qcpump.exe` if you
+installed for a single user, or `C:\\Program Files (x86)\\QCPump\\qcpump.exe`
+if you installed for all users).
+
+.. figure:: images/select_qcpump.png
+    :alt: QCPump: Select the QCPump application to link to
+
+    Select the QCPump application to link to
+
+
+and then finish the dialog.
+
+Next we need to move the shortcut to the appropriate startup folder.
+
+To startup for just the current user open the Run dialog (Win Key + R), type
+`shell:startup` and click OK.
+
+.. figure:: images/shell_startup.png
+    :alt: QCPump: Open Startup folder
+
+    Open Startup folder
+
+
+Or to startup for all users open the Run dialog (Win Key + R), type
+`shell:common startup` and click OK.
+
+.. figure:: images/shell_startup_common.png
+    :alt: QCPump: Open Common Startup folder
+
+    Open Common Startup folder
+
+
+
+Now drag and drop the desktop link into the startup folder:
+
+.. figure:: images/startup_shortcut.png
+    :alt: QCPump: Startup Shortcut
+
+    Startup Shortcut
+
+
+Finally launch QCPump and ensure that "Run Pumps On Launch" is checked.
+
+.. figure:: images/run_pumps_on_launch.png
+    :alt: QCPump: Tell QCPump to automatically start running pumps on launch
+
+    Tell QCPump to automatically start running pumps on launch
 
 
 .. _install-source:

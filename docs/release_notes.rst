@@ -6,7 +6,11 @@ Release Notes
 v0.3.4
 ------
 
-* Attempt to correct path for cacert.pem when running in pyinstaller
+* Ensure ssl certificate files are found / installed by pyinstaller
+* Switch to using site_config_dir instead of user_config_dir for storing QCPump
+  configs and logs so that multiple users can use same configuration. It is
+  recommended that you "Install for All Users" when installing QCPump.
+* Instructions for starting QCPump automatically have been added.
 
 v0.3.3
 ------
