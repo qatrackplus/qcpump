@@ -3,6 +3,12 @@
 Release Notes
 =============
 
+v0.3.6
+------
+
+* Resolves an issue with unknown null urls being cached leading to pumps
+  needing to be restarted in order to "re-discover" the URL to upload data to.
+
 v0.3.5
 ------
 

@@ -6,7 +6,7 @@
 ; MyAppNameLower must match Settings.APPNAME
 #define MyAppNameLower "qcpump"
 
-#define MyAppVersion "0.3.5"
+#define MyAppVersion "0.3.6"
 #define MyAppPublisher "QATrack+ Project"
 
 ; below must match Settings.VENDOR
