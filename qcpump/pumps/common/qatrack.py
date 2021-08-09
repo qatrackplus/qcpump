@@ -382,7 +382,10 @@ class QATrackFetchAndPost(QATrackAPIMixin):
         if None in key:
             return None
         if key not in self.utc_url_cache:
-            self.utc_url_cache[key] = self._generate_utc_url(unit_id, test_list_name)
+            url = self._generate_utc_url(unit_id, test_list_name)
+            if not url:
+                return
+            self.utc_url_cache[key] = url
 
         return self.utc_url_cache[key]
 
