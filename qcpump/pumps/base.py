@@ -1194,6 +1194,14 @@ class BasePump(wx.Panel):
                 cur_selected = prop.GetValueAsString()
                 new_choices = field_choices[field_name]
 
+                if not new_choices:
+                    # if we don't have any choices to set set the choices to
+                    # the existing current selected so we can hang onto the
+                    # choice.  This is important when QCPump starts up but
+                    # can't connect to QATrack+ for some reason
+
+                    new_choices = [cur_selected]
+
                 prop.SetChoices(wxpg.PGChoices(new_choices))
 
                 # and select appropriate choices

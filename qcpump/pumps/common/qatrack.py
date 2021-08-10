@@ -159,7 +159,7 @@ class QATrackAPIMixin:
                 if 'json' in resp.headers['Content-Type']:
                     msg = resp.json()['detail']
                 else:
-                    msg = str(resp.content) or f"Authorization failed with code {resp.status_code}"
+                    msg = f"Authorization failed with code {resp.status_code}: {getattr(resp, 'reason', '')}"
 
         except Exception as e:
             valid = False
