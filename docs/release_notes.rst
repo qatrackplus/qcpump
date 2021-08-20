@@ -3,6 +3,12 @@
 Release Notes
 =============
 
+v0.3.7
+------
+
+* fix to retain unit choices when connection to QATrack+ fails for DQA3 pumps
+* Attempt to fix SSL certificate errors in some networks.
+
 v0.3.6
 ------
 

@@ -1,8 +1,8 @@
 """QCPump main entry point"""
-import sys
-
-if 'win' in  sys.platform.lower():
-    import patch_certs
+try:
+    import patch_certs  # noqa: F401
+except Exception:
+    pass
 import qcpump
 
 qcpump.main()
