@@ -3,9 +3,11 @@
 Release Notes
 =============
 
-v0.3.7
+v0.3.8
 ------
 
+* Allow disabling certificate patching by putting a file called
+  nopatch.txt in C:\ProgramData\QATrack Project\qcpump\
 * fix to retain unit choices when connection to QATrack+ fails for DQA3 pumps
 * Attempt to fix SSL certificate errors in some networks.
 
