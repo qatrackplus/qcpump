@@ -153,7 +153,7 @@ Create an API Token
 
 In order to upload your data to QATrack+ via the API you will require an API
 token.  See the `QATrack+ documentation
-<https://docs.qatrackplus.com/en/latest/api/guide.html#getting-an-api-token>`_
+<https://docs.qatrackplus.com/en/stable/api/guide.html#getting-an-api-token>`_
 for how to create an API token.  You may wish to create a dedicated user in
 QATrack+ just for use with QCPump.  The user will only need a single permission
 in order to upload data: `qa | test list instance | Can add test list
@@ -308,7 +308,7 @@ Assign Test Lists to Units
 ..........................
 
 Once you have created these Test Lists in QATrack+ you need to `assign them to
-units <https://docs.qatrackplus.com/en/latest/admin/qa/assign_to_unit.html>`_
+units <https://docs.qatrackplus.com/en/stable/admin/qa/assign_to_unit.html>`_
 you want to record DQA3 data for.
 
 
