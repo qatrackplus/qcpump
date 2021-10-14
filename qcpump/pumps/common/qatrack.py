@@ -22,6 +22,7 @@ HTTP_BAD_REQUEST = requests.codes['bad_request']
 MISSING_TEST_DATA_ERR = 'missing data for tests'.lower()
 
 TEST_TO_SLUG_REPLACEMENTS = [
+    ("Â", ""),
     ("/", "_"),
     (" ", "_"),
     ("-", "_"),
