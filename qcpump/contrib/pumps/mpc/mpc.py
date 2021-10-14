@@ -221,7 +221,18 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
     def pump(self):
         self._unit_cache = {}
         self._record_meta_cache = {}
+        self.set_qatrack_unit_names_to_ids()
         return super().pump()
+
+    def set_qatrack_unit_names_to_ids(self):
+        """Fetch all available qatrack unit names.  We are overriding common.qatrack version
+        of this because users are not selecting the unit names, instead we're getting
+        directly from directory name"""
+        self.qatrack_unit_names_to_ids = {}
+
+        endpoint = self.construct_api_url("units/units")
+        for unit in self.get_qatrack_choices(endpoint):
+            self.qatrack_unit_names_to_ids[unit['name']] = unit['number']
 
     def fetch_records(self):
         """Return a llist of Path objects representing Results.csv files"""
