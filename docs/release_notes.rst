@@ -3,6 +3,13 @@
 Release Notes
 =============
 
+v0.3.9
+------
+
+* Fix issue with missing Unit names for MPC
+* Fix issue with "Â" appearing in some files
+* Fixed broken link to QATrack docs
+
 v0.3.8
 ------
 
