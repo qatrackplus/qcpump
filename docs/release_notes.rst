@@ -3,6 +3,11 @@
 Release Notes
 =============
 
+v0.3.10
+-------
+
+* Added DQA SQL Server database pumps
+
 v0.3.9
 ------
 

@@ -27,6 +27,7 @@ data sources:
 
 * DQA3 Firebird Database version 01.03
 * DQA3 Firebird Database version 01.04
+* DQA3 SQL Server Database version 01.06
 * DQA3 data from Atlas 1.5
 
 
@@ -406,6 +407,39 @@ You should now be able to use the username `qcpump` and password `qcpump` for
 the `User` and `Password` settings described above.
 
 
+.. _pump_type-dqa3-sqlserver:
+
+DQA3: SQL Server Individual Beams DQA3 Pump Type
+------------------------------------------------
+
+
+Config options specific to DQA3 SQL Server databases.
+
+DQA3Reader
+..........
+
+Host
+    Enter the host name of the SQL Server database server you want to connect to
+Database
+    Enter the name of the database you want to connect to on the server.
+    For example 'atlas'
+User
+    Enter the username you want to use to connect to the database with
+Password
+    Enter the password you want to use to connect to the database with
+Port
+    Enter the port number that the SQL Server database server is listening on
+Driver
+    Select the database driver you want to use. On Windows you will typically
+    want to use the `ODBC Driver 17 for SQL Server` driver (ensure you have
+    this driver installed on the computer running QCPump!). On Linux you will
+    likely want to use one of the TDS drivers.
+History Days
+    Enter the number of prior days you want to look for data to import.  If you
+    are importing historical data you may want to temporarily set this to a large
+    number of days (i.e. to get the last years worth of data set History days to 365) but
+    normally a small number of days should be used to minimize the number of records
+    fetched.
 
 .. _pump_type-dqa3-atlas:
 

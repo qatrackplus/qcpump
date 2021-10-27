@@ -10,7 +10,7 @@ Installing with the Windows Installer
 .....................................
 
 On Windows platforms please download the `QCPump Installer
-<https://github.com/qatrackplus/qcpump/raw/master/installer/qcpump-setup-0.3.9.exe>`_.
+<https://github.com/qatrackplus/qcpump/raw/master/installer/qcpump-setup-0.3.10.exe>`_.
 Download and run the installer following the prompts.  You may choose to
 install for the current user only, or all users on this system.  
 
