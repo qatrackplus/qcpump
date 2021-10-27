@@ -314,9 +314,10 @@ class TestQATrackMPCPump:
         self.pump._unit_cache = {'not empty': 123}
         self.pump._record_meta_cache = {'not empty': 123}
         with mock.patch("qcpump.pumps.common.qatrack.QATrackFetchAndPost.pump"):
-            self.pump.pump()
-            assert not self.pump._record_meta_cache
-            assert not self.pump._unit_cache
+            with mock.patch("qcpump.contrib.pumps.mpc.mpc.QATrackMPCPump.set_qatrack_unit_names_to_ids"):
+                self.pump.pump()
+                assert not self.pump._record_meta_cache
+                assert not self.pump._unit_cache
 
     def test_history_cutoff_date(self):
 
