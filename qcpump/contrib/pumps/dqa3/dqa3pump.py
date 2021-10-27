@@ -17,6 +17,7 @@ DATE_GROUP_FMT = "%Y-%m-%d-%H-%M"
 db_queriers = {
     'fdb': fdb_query,
     'firebirdsql': firebirdsql_query,
+    'atlas': mssql_query,
     'mssql': mssql_query,
 }
 
@@ -91,7 +92,7 @@ class BaseDQA3:
 
     @property
     def querier(self):
-        if self.db_type == "mssql":
+        if self.db_type in ["mssql", "atlas"]:
             return db_queriers[self.db_type]
         return db_queriers[self.get_config_value("DQA3Reader", "driver")]
 
@@ -390,12 +391,107 @@ class FirebirdDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
     ]
 
 
+class SQLServerDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
+
+    DISPLAY_NAME = "DQA3: SQL Server: One Beam Per Test List"
+
+    query_parameter = "?"
+    db_type = "mssql"
+
+    db_kwargs_to_connect_kwargs = {
+        'py-tds': {
+            'host': 'dsn',
+        },
+        'FreeTDS': {
+            'host': 'server',
+        },
+        'ODBC Driver 17 for SQL Server': {
+            'host': 'server',
+        },
+        'SQL Server Native Client 11.0': {
+            'host': 'server',
+        },
+    }
+
+    CONFIG = [
+        {
+            'name': 'DQA3Reader',
+            'multiple': False,
+            'validation': 'validate_dqa3reader',
+            'fields': [
+                {
+                    'name': 'host',
+                    'type': STRING,
+                    'required': True,
+                    'help': "Enter the host name of the database server you want to connect to",
+                    'default': r'localhost\DailyQA',
+                },
+                {
+                    'name': 'database',
+                    'label': "Database Name",
+                    'type': STRING,
+                    'required': True,
+                    'help': (
+                        "Enter the name of the database you want to connect to on the server."
+                        r" For example 'atlas'"
+                    ),
+                    'default': 'DailyQA',
+                },
+                {
+                    'name': 'user',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'sa',
+                    'help': "Enter the username you want to use to connect to the database with",
+                },
+                {
+                    'name': 'password',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'Password123',
+                    'help': "Enter the password you want to use to connect to the database with",
+                },
+                {
+                    'name': 'port',
+                    'type': INT,
+                    'required': False,
+                    'default': 1433,
+                    'help': "Enter the port number that the Firebird Database server is listening on",
+                    'validation': {
+                        'min': 0,
+                        'max': 2**16 - 1,
+                    }
+                },
+                {
+                    'name': 'driver',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select database driver you want to use",
+                    'default': 'ODBC Driver 17 for SQL Server',
+                    'choices': ['ODBC Driver 17 for SQL Server', 'py-tds', 'FreeTDS', 'SQL Server Native Client 11.0'],
+                },
+                {
+                    'name': 'history days',
+                    'label': 'Days of history',
+                    'type': INT,
+                    'required': False,
+                    'default': 1,
+                    'help': "Enter the number of days you want to import data for",
+                },
+            ],
+        },
+        QATrackFetchAndPost.QATRACK_API_CONFIG,
+        BaseDQA3.TEST_LIST_CONFIG,
+        BaseDQA3.UNIT_CONFIG,
+    ]
+
+
 class AtlasDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
 
     DISPLAY_NAME = "DQA3: Atlas: One Beam Per Test List"
 
     query_parameter = "?"
-    db_type = "mssql"
+    db_type = "atlas"
 
     db_kwargs_to_connect_kwargs = {
         'py-tds': {
@@ -748,12 +844,134 @@ class FirebirdGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
     ]
 
 
+class SQLServerGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
+
+    DISPLAY_NAME = "DQA3: SQL Server: Multiple Beams Per Test List"
+
+    query_parameter = "?"
+    db_type = "mssql"
+
+    db_kwargs_to_connect_kwargs = {
+        'py-tds': {
+            'host': 'dsn',
+        },
+        'FreeTDS': {
+            'host': 'server',
+        },
+        'ODBC Driver 17 for SQL Server': {
+            'host': 'server',
+        },
+        'SQL Server Native Client 11.0': {
+            'host': 'server',
+        },
+    }
+
+    CONFIG = [
+        {
+            'name': 'DQA3Reader',
+            'multiple': False,
+            'validation': 'validate_dqa3reader',
+            'fields': [
+                {
+                    'name': 'host',
+                    'type': STRING,
+                    'required': True,
+                    'help': "Enter the host name of the database server you want to connect to",
+                    'default': r'localhost\DailyQA'
+                },
+                {
+                    'name': 'database',
+                    'label': "Database Name",
+                    'type': STRING,
+                    'required': True,
+                    'help': (
+                        "Enter the name of the database you want to connect to on the server."
+                        r" For example 'DailyQA'"
+                    ),
+                    'default': 'DailyQA',
+                },
+                {
+                    'name': 'user',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'sa',
+                    'help': "Enter the username you want to use to connect to the database with",
+                },
+                {
+                    'name': 'password',
+                    'type': STRING,
+                    'required': True,
+                    'default': 'Password123',
+                    'help': "Enter the password you want to use to connect to the database with",
+                },
+                {
+                    'name': 'port',
+                    'type': INT,
+                    'required': False,
+                    'default': 1433,
+                    'help': "Enter the port number that the Firebird Database server is listening on",
+                    'validation': {
+                        'min': 0,
+                        'max': 2**16 - 1,
+                    }
+                },
+                {
+                    'name': 'driver',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select database driver you want to use",
+                    'default': 'ODBC Driver 17 for SQL Server',
+                    'choices': ['ODBC Driver 17 for SQL Server', 'py-tds', 'FreeTDS', 'SQL Server Native Client 11.0'],
+                },
+                {
+                    'name': 'history days',
+                    'label': 'Days of history',
+                    'type': INT,
+                    'required': False,
+                    'default': 1,
+                    'help': "Enter the number of days you want to import data for",
+                },
+                {
+                    'name': 'grouping window',
+                    'label': 'Results group time interval (min)',
+                    'type': INT,
+                    'required': True,
+                    'default': 20,
+                    'help': "Enter the time interval (in minutes) for which results should be grouped together.",
+                },
+                {
+                    'name': 'wait time',
+                    'label': 'Wait for results (min)',
+                    'type': INT,
+                    'required': True,
+                    'default': 20,
+                    'help': (
+                        "Wait this many minutes for more results to be "
+                        "written to disk before uploading grouped results"
+                    ),
+                },
+                {
+                    'name': 'beam types',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'default': "All",
+                    'choices': ["All", "Photons", "Electrons"],
+                    'help': "Choose which type of beams to include",
+                },
+            ],
+        },
+        QATrackFetchAndPost.QATRACK_API_CONFIG,
+        BaseGroupedDQA3.TEST_LIST_CONFIG,
+        BaseDQA3.UNIT_CONFIG,
+    ]
+
+
 class AtlasGroupedDQA3(BaseGroupedDQA3, QATrackFetchAndPost, BasePump):
 
     DISPLAY_NAME = "DQA3: Atlas: Multiple Beams Per Test List"
 
     query_parameter = "?"
-    db_type = "mssql"
+    db_type = "atlas"
 
     db_kwargs_to_connect_kwargs = {
         'py-tds': {

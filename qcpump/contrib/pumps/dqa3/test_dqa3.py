@@ -60,7 +60,7 @@ class TestDQA3:
         ("1.5", True, "Successful connection"),
         ("9.9", False, "Unknown database type"),
     ])
-    def test_validate_dqa3reaer_dqa3_connect(self, version, expected_valid, expected_msg):
+    def test_validate_dqa3reader_dqa3_connect(self, version, expected_valid, expected_msg):
         props = {
             'host': 'host',
             'port': 'port',
@@ -76,7 +76,7 @@ class TestDQA3:
                 assert valid is expected_valid
                 assert expected_msg in msg
 
-    def test_validate_dqa3reaer_dqa3_connect_failure(self):
+    def test_validate_dqa3reader_dqa3_connect_failure(self):
         props = {
             'host': 'host',
             'port': 'port',
@@ -223,11 +223,11 @@ class TestDQA3:
         with mock.patch.object(pump, "prepare_dqa3_query", side_effect=fail):
             assert pump.fetch_records() == []
 
-    def test_prepare_dqa3_query_mssql(self):
+    def test_prepare_dqa3_query_atlas(self):
 
         now = datetime.datetime.now()
         pump = self.get_pump(dqa3pump.AtlasDQA3)
-        trend_query_path = pump.get_pump_path() / "queries" / "mssql" / "1.5" / "trend.sql"
+        trend_query_path = pump.get_pump_path() / "queries" / "atlas" / "1.5" / "trend.sql"
         pump.dqa3_trend_query = trend_query_path.read_text()
         with mock.patch("qcpump.contrib.pumps.dqa3.dqa3pump.BaseDQA3.unit_map", new_callable=mock.PropertyMock) as mock_unit_map:  # noqa: E501
             mock_unit_map.return_value = {'dqa unit 1': 'unit 1', 'dqa unit 2': 'unit 2'}
