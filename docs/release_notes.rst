@@ -3,6 +3,16 @@
 Release Notes
 =============
 
+v0.3.11
+-------
+
+* Fixed bug with base64 encoding of files for QATrackGenericBinaryFileUploader pump
+* MPC pumps should now handle 2.5X and HDTSE beams
+* MPC pumps should handle directory names like NDS-WKS-SN1234-2015-01-01-00-00-00-0001-10x-Beam
+* QATrack+ validation requests receiving a 307 Temporary Redirect response will
+  retry their request. This is an attempt (possibly in vain) to work arround
+  network monitoring software which may temporarily return 307s.
+
 v0.3.10
 -------
 

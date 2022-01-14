@@ -26,10 +26,9 @@ Release Checklist
     * [ ] qcpump-installer.iss
     * [ ] docs/install.rst (link to installer)
 * [ ] Exe built (`pyinstaller qcpump.spec`)
-* [ ] Installer built
-
     * [ ] New data files added to qcpump.spec::data_files
     * [ ] New dependencies added to qcpump.spec::hidden_import
+* [ ] Installer built
     * [ ] Installer comitted to repository
 
 * [ ] Installer tested

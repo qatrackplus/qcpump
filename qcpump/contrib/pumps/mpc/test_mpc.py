@@ -14,11 +14,12 @@ dir_name_metas = [
             'path': "NDS-WKS-SN1234-2020-11-06-09-59-21-0009-GeometryCheckTemplate6xMVkV",
             'serial_no': '1234',
             'date': dt(2020, 11, 6, 9, 59, 21),
-            'unknown': "0009",
+            'beam_num': "0009",
             "energy": '6',
             'beam_type': 'X',
             'fff': '',
             'mvkv': 'MVkV',
+            'hdtse': '',
             'template': 'GeometryCheckTemplateMVkV',
             'enhanced': ''
         }
@@ -29,11 +30,12 @@ dir_name_metas = [
             'path': "NDS-WKS-SN1234-2020-11-06-09-59-21-0007-BeamCheckTemplate16e",
             'serial_no': '1234',
             'date': dt(2020, 11, 6, 9, 59, 21),
-            'unknown': "0007",
+            'beam_num': "0007",
             "energy": '16',
             'beam_type': 'E',
             'fff': '',
             'mvkv': '',
+            'hdtse': '',
             'template': 'BeamCheckTemplate',
             'enhanced': ''
         },
@@ -45,11 +47,12 @@ dir_name_metas = [
             'path': "NDS-WKS-SN1234-2020-11-06-09-59-21-0000-BeamCheckTemplate6xFFF",
             'serial_no': '1234',
             'date': dt(2020, 11, 6, 9, 59, 21),
-            'unknown': "0000",
+            'beam_num': "0000",
             "energy": '6',
             'beam_type': 'FFF',
             'fff': 'FFF',
             'mvkv': '',
+            'hdtse': '',
             'template': 'BeamCheckTemplate',
             'enhanced': ''
         },
@@ -60,11 +63,12 @@ dir_name_metas = [
             'path': "NDS-WKS-SN1234-2020-09-30-09-15-17-0011-EnhancedMLCCheckTemplate6x",
             'serial_no': '1234',
             'date': dt(2020, 9, 30, 9, 15, 17),
-            'unknown': "0011",
+            'beam_num': "0011",
             "energy": '6',
             'beam_type': 'X',
             'fff': '',
             'mvkv': '',
+            'hdtse': '',
             'template': 'EnhancedMLCCheckTemplate',
             'enhanced': ''
         }
@@ -75,13 +79,129 @@ dir_name_metas = [
             'path': "NDS-WKS-SN1234-2020-10-01-11-26-55-0010-GeometryCheckTemplate6xMVkVEnhancedCouch",
             'serial_no': '1234',
             'date': dt(2020, 10, 1, 11, 26, 55),
-            'unknown': "0010",
+            'beam_num': "0010",
             "energy": '6',
             'beam_type': 'X',
             'fff': '',
             'mvkv': 'MVkV',
+            'hdtse': '',
             'template': 'GeometryCheckTemplateMVkV EnhancedCouch',
             'enhanced': 'EnhancedCouch'
+        },
+    ),
+    (
+        "NDS-WKS-SN7890-2020-10-02-09-08-58-0009-BeamCheckTemplate6eHDTSE",
+        {
+            'path': "NDS-WKS-SN7890-2020-10-02-09-08-58-0009-BeamCheckTemplate6eHDTSE",
+            'serial_no': '7890',
+            'date': dt(2020, 10, 2, 9, 8, 58),
+            'beam_num': "0009",
+            "energy": '6',
+            'beam_type': 'HDTSE',
+            'fff': '',
+            'mvkv': '',
+            'hdtse': 'HDTSE',
+            'template': 'BeamCheckTemplate',
+            'enhanced': ''
+        },
+    ),
+    (
+        "NDS-WKS-SN5432-2021-11-29-20-14-03-0014-BeamCheckTemplate2.5x",
+        {
+            'path': "NDS-WKS-SN5432-2021-11-29-20-14-03-0014-BeamCheckTemplate2.5x",
+            'serial_no': '5432',
+            'date': dt(2021, 11, 29, 20, 14, 3),
+            'beam_num': "0014",
+            "energy": '2.5',
+            'beam_type': 'X',
+            'fff': '',
+            'mvkv': '',
+            'hdtse': '',
+            'template': 'BeamCheckTemplate',
+            'enhanced': ''
+        },
+    ),
+
+
+    # "Old" style
+    (
+        "NDS-WKS-SN4321-2015-12-03-15-45-31-0005-6eHDTSE-Beam",
+        {
+            'path': "NDS-WKS-SN4321-2015-12-03-15-45-31-0005-6eHDTSE-Beam",
+            'serial_no': '4321',
+            'date': dt(2015, 12, 3, 15, 45, 31),
+            'beam_num': "0005",
+            "energy": '6',
+            'beam_type': 'HDTSE',
+            'fff': '',
+            'mvkv': '',
+            'hdtse': 'HDTSE',
+            'template': 'Beam',
+            'enhanced': ''
+        },
+    ),
+    (
+        "NDS-WKS-SN4321-2019-02-12-20-42-27-0000-6xFFF-Beam",
+        {
+            'path': "NDS-WKS-SN4321-2019-02-12-20-42-27-0000-6xFFF-Beam",
+            'serial_no': '4321',
+            'date': dt(2019, 2, 12, 20, 42, 27),
+            'beam_num': "0000",
+            "energy": '6',
+            'beam_type': 'FFF',
+            'fff': 'FFF',
+            'mvkv': '',
+            'hdtse': '',
+            'template': 'Beam',
+            'enhanced': ''
+        },
+    ),
+    (
+        "NDS-WKS-SN4321-2019-02-12-20-42-27-0001-10x-Beam",
+        {
+            'path': "NDS-WKS-SN4321-2019-02-12-20-42-27-0001-10x-Beam",
+            'serial_no': '4321',
+            'date': dt(2019, 2, 12, 20, 42, 27),
+            'beam_num': "0001",
+            "energy": '10',
+            'beam_type': 'X',
+            'fff': '',
+            'mvkv': '',
+            'hdtse': '',
+            'template': 'Beam',
+            'enhanced': ''
+        },
+    ),
+    (
+        "NDS-WKS-SN4321-2019-02-12-20-42-27-0004-6e-Beam",
+        {
+            'path': "NDS-WKS-SN4321-2019-02-12-20-42-27-0004-6e-Beam",
+            'serial_no': '4321',
+            'date': dt(2019, 2, 12, 20, 42, 27),
+            'beam_num': "0004",
+            "energy": '6',
+            'beam_type': 'E',
+            'fff': '',
+            'mvkv': '',
+            'hdtse': '',
+            'template': 'Beam',
+            'enhanced': ''
+        },
+    ),
+    (
+        "NDS-WKS-SN4321-2019-02-12-20-42-28-0009-6x-Geometry",
+        {
+            'path': "NDS-WKS-SN4321-2019-02-12-20-42-28-0009-6x-Geometry",
+            'serial_no': '4321',
+            'date': dt(2019, 2, 12, 20, 42, 28),
+            'beam_num': "0009",
+            "energy": '6',
+            'beam_type': 'X',
+            'fff': '',
+            'mvkv': '',
+            'hdtse': '',
+            'template': 'Geometry',
+            'enhanced': ''
         },
     ),
 ]
@@ -114,6 +234,7 @@ def test_group_by_metas():
         "NDS-WKS-SN1234-2020-11-06-10-55-21-0000-BeamCheckTemplate6xFFF",
         "NDS-WKS-SN1234-2020-11-06-10-50-21-0007-BeamCheckTemplate16e",
         "NDS-WKS-SN1234-2020-11-06-10-50-21-0000-BeamCheckTemplate6xFFF",
+        "NDS-WKS-SN7890-2020-10-02-09-08-58-0009-BeamCheckTemplate6eHDTSE"
     ]
 
     expected_grouped = {
@@ -171,6 +292,11 @@ def test_group_by_metas():
                     "NDS-WKS-SN1234-2020-11-06-10-50-21-0000-BeamCheckTemplate6xFFF",
                 ],
             }
+        },
+        "7890": {
+            mpc.BEAM_AND_GEOMETRY_CHECKS: {
+                "2020-10-02-09-08": ["NDS-WKS-SN7890-2020-10-02-09-08-58-0009-BeamCheckTemplate6eHDTSE"],
+            },
         },
     }
 

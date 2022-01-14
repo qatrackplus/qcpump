@@ -13,13 +13,28 @@ MPC_PATH_RE = re.compile(r"""
      .*                     # preamble like NDS-WKS
      -SN(?P<serial_no>\w+)  # serial number
      -(?P<date>\d\d\d\d\-\d\d\-\d\d\-\d\d\-\d\d\-\d\d)    # YYYY-MM-DD-HH-MM-SS
-     -(?P<unknown>\d\d\d\d) # don't know what these 4 digits represent
+     -(?P<beam_num>\d\d\d\d)
      -(?P<template>[a-zA-Z]+)       # template e.g. BeamCheckTemplate
-     (?P<energy>\d+)        # energy like 6, 9, 12
+     (?P<energy>[\d\.]+)        # energy like 6, 9, 12, 2.5
      (?P<beam_type>[xXeE]+)  # beam type like x, e
      (?P<fff>[fF]+)?        # is FFF or not?
-     (?P<mvkv>[MVkV]+)?      # Whether enhanced test or not e.g. MVkVEnhancedCouch
+     (?P<hdtse>[HDTSE]+)?      # Whether an HDTSE beam
+     (?P<mvkv>[MVkV]+)?
      (?P<enhanced>.*)?      # Whether enhanced test or not e.g. MVkVEnhancedCouch
+ """, re.X)
+
+MPC_PATH_RE_OLD = re.compile(r"""
+     .*                     # preamble like NDS-WKS
+     -SN(?P<serial_no>\w+)  # serial number
+     -(?P<date>\d\d\d\d\-\d\d\-\d\d\-\d\d\-\d\d\-\d\d)    # YYYY-MM-DD-HH-MM-SS
+     -(?P<beam_num>\d\d\d\d)
+     -(?P<energy>[\d\.]+)        # energy like 6, 9, 12, 2.5
+     (?P<beam_type>[xXeE]+)  # beam type like x, e
+     (?P<fff>[fF]+)?        # is FFF or not?
+     (?P<hdtse>[HDTSE]+)?      # Whether an HDTSE beam
+     (?P<mvkv>[MVkV]+)?
+     -(?P<template>[a-zA-Z]+)       # template e.g. Beam or Geometry
+     (?P<enhanced>.*)?
  """, re.X)
 
 DATE_GROUP_FMT = "%Y-%m-%d-%H-%M"
@@ -30,13 +45,22 @@ BEAM_AND_GEOMETRY_CHECKS = "Beam and Geometry Checks"
 
 
 def mpc_path_to_meta(path):
-    meta = MPC_PATH_RE.match(str(path)).groupdict()
+    try:
+        meta = MPC_PATH_RE.match(str(path)).groupdict()
+    except AttributeError:
+        meta = MPC_PATH_RE_OLD.match(str(path)).groupdict()
     meta['path'] = path
     meta['date'] = datetime.datetime(*map(int, meta['date'].split("-")))
     meta['fff'] = "FFF" if meta['fff'] else ''
-    meta['beam_type'] = "FFF" if meta['fff'] else meta['beam_type'].upper()
+    if meta['fff']:
+        meta['beam_type'] = 'FFF'
+    elif meta['hdtse']:
+        meta['beam_type'] = "HDTSE"
+    else:
+        meta['beam_type'] = meta['beam_type'].upper()
     meta['enhanced'] = meta['enhanced'] or ''
     meta['mvkv'] = meta['mvkv'] or ''
+    meta['hdtse'] = meta['hdtse'] or ''
     meta['template'] = ("%s%s %s" % (meta['template'], meta['mvkv'], meta['enhanced'])).strip(" ")
     return meta
 

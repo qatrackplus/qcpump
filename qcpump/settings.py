@@ -61,7 +61,7 @@ class Settings:
     LOG_LEVEL = "info"  # debug | info | warning | error | critical
     LOG_TO_CONSOLE = False  # should logs be written to console as well as log files?
 
-    VERSION = "v0.3.10"  # current QCPump version
+    VERSION = "v0.3.11"  # current QCPump version
     VENDOR = "QATrack Project"
     APPNAME = "qcpump"
 
@@ -73,6 +73,9 @@ class Settings:
     PUMP_DIRECTORIES = None  # set to list of other directories to include user defined pump types from
 
     DB_CONNECT_TIMEOUT = 30  # timeout for database connections where available
+
+    MAX_HTTP_307_COUNT = 3
+    HTTP_307_SLEEP_TIME = 0.5
 
     BROWSER_USER_AGENT = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "

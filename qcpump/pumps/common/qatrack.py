@@ -25,6 +25,7 @@ TEST_TO_SLUG_REPLACEMENTS = [
     ("Â", ""),
     ("/", "_"),
     (" ", "_"),
+    (".", "_"),
     ("-", "_"),
     ("[mm]", "mm"),
     ("[°]", "deg"),
@@ -139,7 +140,7 @@ class QATrackAPIMixin:
             return False, "Warning: The API url usually ends in '/api/'"
         return True, ""
 
-    def validate_qatrack(self, values):
+    def validate_qatrack(self, values, count=0):
 
         url = values['api url']
         if not url.endswith("/"):
@@ -149,7 +150,22 @@ class QATrackAPIMixin:
         try:
             session = self.get_qatrack_session(values)
             resp = session.get(url, allow_redirects=False)
-            if resp.status_code == 200:
+            if resp.status_code == 307:
+                if count < settings.MAX_HTTP_307_COUNT:
+                    time.sleep(settings.HTTP_307_SLEEP_TIME)
+                    count += 1
+                    self.log_info(
+                        f"Received HTTP 307. Will retry {settings.MAX_HTTP_307_COUNT - count + 1} more times"
+                    )
+                    return self.validate_qatrack(values, count)
+                else:
+                    self.log_error(
+                        f"Received {settings.MAX_HTTP_307_COUNT} HTTP 307 redirects. "
+                        f"Content of the response was: {resp.content}"
+                    )
+                    valid = False
+                    msg = "Recieved too many HTTP 307 Temporary Redirects"
+            elif resp.status_code == 200:
                 valid = True
                 msg = "Connected Successfully"
             elif resp.status_code == 302:
@@ -377,7 +393,7 @@ class QATrackFetchAndPost(QATrackAPIMixin):
     def _utc_url_for_record(self, record):
         """Convert a record to the url (using cached value where possible) for performing a UTC"""
 
-        unit_id = self.qatrack_unit_names_to_ids[self.qatrack_unit_for_record(record)]
+        unit_id = self.qatrack_unit_names_to_ids.get(self.qatrack_unit_for_record(record))
         test_list_name = self.test_list_for_record(record)
         key = (unit_id, test_list_name)
         if None in key:
@@ -548,7 +564,7 @@ class QATrackFetchAndPostBinaryFile(QATrackFetchAndPostTextFile):
     def test_values_from_record(self, record):
         path = record[1]  # (unit, path, *args)
         slug, filename = self.slug_and_filename_for_record(record)
-        value = base64.b64encode(path.read_bytes().decode(self.ENCODING)),
+        value = base64.b64encode(path.read_bytes()).decode(self.ENCODING)
         return {
             slug: {
                 "value": value,
