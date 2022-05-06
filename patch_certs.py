@@ -51,6 +51,7 @@ from qcpump.logs import get_logger  # noqa: E402
 logger = get_logger("certs")
 if exception:
     logger.error("Failed to patch certficates: %s" % exception)
-logger.debug(f"certifi-win32 PEM_PATH {certifi_win32.wincerts.where()}")
-logger.debug(f"certifi-win32 where {certifi_win32.wincerts.PEM_PATH}")
-logger.debug(f"certify.where() {certifi.where()}")
+else:
+    logger.debug(f"certifi-win32 PEM_PATH {certifi_win32.wincerts.where()}")
+    logger.debug(f"certifi-win32 where {certifi_win32.wincerts.PEM_PATH}")
+    logger.debug(f"certify.where() {certifi.where()}")
