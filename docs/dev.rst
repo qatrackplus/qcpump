@@ -33,6 +33,7 @@ Release Checklist
 
 * [ ] Installer tested
 * [ ] Release tagged  `git tag -a vX.X.X -m vX.X.X`
+* [ ] Push to master with tags `git push origin master --tags`
 
 
 Building an exe on Windows

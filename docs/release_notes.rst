@@ -3,6 +3,14 @@
 Release Notes
 =============
 
+v0.3.12
+-------
+
+* Fixed bug related to logging of certificate paths
+* Added a "Fast Search" option to MPC pumps. This option will restrict search
+  for Results.csv files to subdirectories called MPCChecks. (defaults to on)  
+* Adjusted auth headers to make it possible for QCPump to talk to RadMachine
+
 v0.3.11
 -------
 
