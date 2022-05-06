@@ -6,7 +6,7 @@ from pathlib import Path
 
 import jinja2
 
-from qcpump.pumps.base import DIRECTORY, BasePump, INT, STRING
+from qcpump.pumps.base import BOOLEAN, DIRECTORY, BasePump, INT, STRING
 from qcpump.pumps.common.qatrack import QATrackFetchAndPost, slugify
 
 MPC_PATH_RE = re.compile(r"""
@@ -156,6 +156,17 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
                     'help': "Select the TDS directory (e.g. I:\\TDS or \\\\YOURSERVER\\VA_Transer\\TDS)",
                 },
                 {
+                    'name': 'fast search',
+                    'label': 'Fast search',
+                    'type': BOOLEAN,
+                    'required': False,
+                    'default': True,
+                    'help': (
+                        "If checked, the search for Results.csv files will be limited to MPCChecks "
+                        "sub directories (i.e. I:\\TDS\\*\\MPCChecks\\**\\*.csv)"
+                    ),
+                },
+                {
                     'name': 'history days',
                     'label': 'Days of history',
                     'type': INT,
@@ -261,8 +272,10 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
     def fetch_records(self):
         """Return a llist of Path objects representing Results.csv files"""
         source = self.get_config_value("MPC", "tds directory").replace("\\", "/")
+        fast_search = self.get_config_value("MPC", 'fast search')
+        globber = '*/MPCChecks/**/*.csv' if fast_search else '**/Results.csv'
         date_cutoff = self.history_cutoff_date()
-        paths = Path(source).glob("**/Results.csv")
+        paths = Path(source).glob(globber)
         paths = [p.absolute() for p in paths if timestamp_filter(p.stat().st_mtime, date_cutoff)]
         grouped = self.group_records(paths)
         filtered = self.filter_records(grouped)

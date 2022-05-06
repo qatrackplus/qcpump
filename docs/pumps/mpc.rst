@@ -322,6 +322,12 @@ TDS Directory
     The "TDS directory" where MPC results are stored. Examples may be I:\\TDS or
     \\\\\\YOURSERVER\\VA_Transer\\TDS
 
+Fast Search
+    Restricts the search for Results.csv files to MPCChecks subdirectories.
+    MPCChecks is the official Varian directory name and unless you have
+    MPCResults in folders named something other than "MPCChecks", it is
+    recommended you leave this setting on for performance reasons.
+
 Days of history
      The number of prior days you want to look for data to import. This should
      generall be 1 unless you are doing an initial import of historical results
