@@ -186,8 +186,10 @@ class QATrackAPIMixin:
 
     def get_qatrack_session(self, values=None):
         vals = values or self.get_config_values('QATrack+ API')[0]
+        url = vals.get('api url')
+        auth_header = '%sAuthorization' % ('Rad' if 'radformation' in url else '')
         s = PACSession()
-        s.headers['Authorization'] = f"Token {vals['auth token']}"
+        s.headers[auth_header] = f"Token {vals['auth token']}"
         if settings.BROWSER_USER_AGENT:
             s.headers['User-Agent'] = settings.BROWSER_USER_AGENT
 
