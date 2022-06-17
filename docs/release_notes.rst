@@ -11,6 +11,15 @@ v0.3.12
   for Results.csv files to subdirectories called MPCChecks. (defaults to on)  
 * Adjusted auth headers to make it possible for QCPump to talk to RadMachine
 
+* Partial work around for a suspected race condition occuring in the DQA3
+  database software that causes in an incorrect data_key being written to the
+  dqa3_trend table and hence data being sent to the wrong unit. The workaround
+  implmented results in the dosimetry data being sent to the correct unit but
+  the temperature, pressure, comment, signature, and device serial number will
+  still be incorrect if this occurs again.  This is the result of a defect
+  in the DQA3 software and should be exceedingly rare.
+
+
 v0.3.11
 -------
 

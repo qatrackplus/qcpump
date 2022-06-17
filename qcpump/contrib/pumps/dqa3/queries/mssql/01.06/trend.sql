@@ -67,7 +67,7 @@ JOIN
 JOIN
     dqa3_calibration cal on data.cal_key = cal.cal_key
 JOIN
-    dqa3_template template on data.set_key = template.set_key
+    dqa3_template template on tr.set_key = template.set_key
 JOIN
     dqa3_machine mach on template.mach_key = mach.mach_key
 JOIN
