@@ -10,7 +10,12 @@ v0.3.12
 * Added a "Fast Search" option to MPC pumps. This option will restrict search
   for Results.csv files to subdirectories called MPCChecks. (defaults to on)  
 * Adjusted auth headers to make it possible for QCPump to talk to RadMachine
-
+* Added Beam Shape Constancy results from the DQA3\_TREND table for DQA3 v1.06
+  SQL Server DBs. There are 9 new results sent to the server:
+    bcs1_{beam}, bcs2_{beam}, bcs3_{beam}
+    bcs1_baseline_{beam}, bcs2_baseline_{beam}, bcs3_baseline_{beam}
+    bcs1_diff_{beam}, bcs2_diff_{beam}, bcs3_diff_{beam}
+  It is believed that bcs2 is the value shown in the DQA3 software.
 * Partial work around for a suspected race condition occuring in the DQA3
   database software that causes in an incorrect data_key being written to the
   dqa3_trend table and hence data being sent to the wrong unit. The workaround
