@@ -67,8 +67,6 @@ FROM
 JOIN
     Device dev on data.DeviceId = dev.DeviceId
 JOIN
-    Dqa3Calibration cal on data.Dqa3CalibrationId = cal.Dqa3CalibrationId
-JOIN
     MachineTemplate template on data.MachineTemplateId = template.MachineTemplateId
 JOIN
     Machine mach on template.MachineId = mach.MachineId
