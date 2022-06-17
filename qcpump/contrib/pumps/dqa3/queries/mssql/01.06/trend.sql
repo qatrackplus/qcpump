@@ -32,17 +32,17 @@ SELECT
     tr.rel_baseline_qaflat as qaflat_baseline,
     tr.rel_diff_qaflat as qaflat_diff,
 
-    tr.results_bcs1 as bcs1,
-    tr.rel_baseline_bcs1 as bcs1_baseline,
-    tr.rel_diff_bcs1 as bcs1_diff,
+    tr.results_bsc1 as bsc1,
+    tr.rel_baseline_bsc1 as bsc1_baseline,
+    tr.rel_diff_bsc1 as bsc1_diff,
 
-    tr.results_bcs2 as bcs2,
-    tr.rel_baseline_bcs2 as bcs2_baseline,
-    tr.rel_diff_bcs2 as bcs2_diff,
+    tr.results_bsc2 as bsc2,
+    tr.rel_baseline_bsc2 as bsc2_baseline,
+    tr.rel_diff_bsc2 as bsc2_diff,
 
-    tr.results_bcs3 as bcs3,
-    tr.rel_baseline_bcs3 as bcs3_baseline,
-    tr.rel_diff_bcs3 as bcs3_diff,
+    tr.results_bsc3 as bsc3,
+    tr.rel_baseline_bsc3 as bsc3_baseline,
+    tr.rel_diff_bsc3 as bsc3_diff,
 
     CASE
         WHEN template.BEAMTYPE='Electron' THEN tr.REL_DIFF_EENERGY
