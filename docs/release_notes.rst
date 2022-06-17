@@ -14,6 +14,8 @@ v0.3.12
 * For FFF beams, added Beam Shape Constancy results from the DQA3\_TREND table for DQA3 v1.06
   SQL Server DBs. There are 9 new results sent to the server:
 
+    .. code-block::
+
         bsc{1,2,3}_{beam}
         bsc{1,2,3}_baseline_{beam}
         bsc{1,2,3}_diff_{beam}
