@@ -31,12 +31,13 @@ v0.3.12
   bsc2_10_fff
 
 * Partial work around for a suspected race condition occuring in the DQA3
-  database software that causes in an incorrect data_key being written to the
-  dqa3_trend table and hence data being sent to the wrong unit. The workaround
-  implmented results in the dosimetry data being sent to the correct unit but
-  the temperature, pressure, comment, signature, and device serial number will
-  still be incorrect if this occurs again.  This is the result of a defect
-  in the DQA3 software and should be exceedingly rare.
+  database software. The race condition causes an incorrect data_key to be
+  written to the dqa3_trend table, and hence data was being sent to the wrong
+  unit.  The workaround implmented here results in the dosimetry data being
+  sent to the correct unit, but the temperature, pressure, comment, signature,
+  and device serial number will still be incorrect if this occurs again.  This
+  is the result of a defect in the DQA3 software and should be exceedingly
+  rare.
 
 
 v0.3.11
