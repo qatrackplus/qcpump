@@ -90,6 +90,13 @@ class QATrackAPIMixin:
                 'default': 'd8a65e755a1f9fe8df40d9a15fcd29565f2504cd',
             },
             {
+                'name': 'include comment',
+                'type': BOOLEAN,
+                'required': False,
+                'help': "Enable if you want to upload a comment indicating the data came from QCPump (currently prevents auto review from occuring).",
+                'default': False,
+            },
+            {
                 'name': 'throttle',
                 'type': FLOAT,
                 'required': True,
@@ -339,6 +346,11 @@ class QATrackFetchAndPost(QATrackAPIMixin):
     def test_values_from_record(self, record):
         return {}
 
+    def get_comment_for_record(self, record):
+        """Only generate a comment if requested.  Comments currently prevent autoreview in QATrack+/RadMachine"""
+        include_comment = self.get_config_value('QATrack+ API', 'include comment')
+        return self.comment_for_record(record) if include_comment else ""
+
     def comment_for_record(self, record):
         """Implement this in subclasses. Accept a record to process and return a QATrack+ Unit Name"""
         return ""
@@ -375,7 +387,7 @@ class QATrackFetchAndPost(QATrackAPIMixin):
             return
 
         work_started, work_completed = self.work_datetimes_for_record(record)
-        comment = self.comment_for_record(record)
+        comment = self.get_comment_for_record(record)
         day = self.cycle_day_for_record(record)
         test_values_from_record = self.test_values_from_record(record)
 

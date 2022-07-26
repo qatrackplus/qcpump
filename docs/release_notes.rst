@@ -3,6 +3,11 @@
 Release Notes
 =============
 
+v0.3.13
+-------
+
+* Made comment uploaded to QATrack+ optional (defaults to off because the comment prevents auto review)
+
 v0.3.12
 -------
 

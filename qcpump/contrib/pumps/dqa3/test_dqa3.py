@@ -193,6 +193,16 @@ class TestDQA3:
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         assert pump.comment_for_record({'comment': comment}) == expected
 
+    def test_get_comment_for_record_false(self):
+        pump = self.get_pump(dqa3pump.AtlasDQA3)
+        with mock.patch.object(pump, "get_config_value", return_value=False):
+            assert pump.get_comment_for_record({}) == ""
+
+    def test_get_comment_for_record_true(self):
+        pump = self.get_pump(dqa3pump.AtlasDQA3)
+        with mock.patch.object(pump, "get_config_value", return_value=True):
+            assert pump.get_comment_for_record({'comment': 'comment'}) == "comment"
+
     def test_history_days(self):
         pump = self.get_pump(dqa3pump.AtlasDQA3)
         with mock.patch.object(pump, "get_config_value", return_value=123):
