@@ -348,6 +348,8 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
         test_vals = {}
         sn, template_type, date, metas = record
 
+        include_comment = self.get_config_value('QATrack+ API', 'include comment')
+
         for meta in metas:
 
             beam_type = f"{meta['energy']}{meta['beam_type']}"
@@ -358,8 +360,9 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
                 slug = self.slugify(row[0], beam_type)
                 test_vals[slug] = {
                     'value': self.test_value(row[1]),
-                    'comment': "Threshold: %.3f,Result: %s" % (self.test_value(row[2]), row[3].strip()),
                 }
+                if include_comment:
+                    test_vals[slug]['comment'] = "Threshold: %.3f,Result: %s" % (self.test_value(row[2]), row[3].strip())
 
         return test_vals
 

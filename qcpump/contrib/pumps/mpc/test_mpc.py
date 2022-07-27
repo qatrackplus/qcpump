@@ -569,6 +569,9 @@ class TestQATrackMPCPump:
                 self.pump.qatrack_unit_for_record(("1234", "", "", [])) is None
 
     def test_values_from_record(self):
+        self.pump.state = {
+            "QATrack+ API": {'subsections': [[{'config_name': 'include comment', 'value': True}]]}
+        }
         rows = io.StringIO("""Name [Unit],Value,Threshold,Evaluation Result
 CollimationGroup/MLCGroup/MLCMaxOffsetA [mm],0.4,1,Pass
 CollimationGroup/MLCGroup/MLCMaxOffsetB [mm],0.43,1,Pass
@@ -607,6 +610,39 @@ CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm],0.23,1,Pass
                 'value': 0.27,
                 'comment': 'Threshold: 1.000,Result: Pass',
             },
+        }
+        assert res == expected
+
+    def test_values_from_record_no_comment(self):
+        self.pump.state = {
+            "QATrack+ API": {'subsections': [[{'config_name': 'include comment', 'value': False}]]}
+        }
+        rows = io.StringIO("""Name [Unit],Value,Threshold,Evaluation Result
+CollimationGroup/MLCGroup/MLCMaxOffsetA [mm],0.4,1,Pass
+CollimationGroup/MLCGroup/MLCMaxOffsetB [mm],0.43,1,Pass
+CollimationGroup/MLCGroup/MLCMeanOffsetA [mm],0.3,1,Pass
+CollimationGroup/MLCGroup/MLCMeanOffsetB [mm],0.27,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf1 [mm],0.27,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf2 [mm],0.34,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf3 [mm],0.3,1,Pass
+CollimationGroup/MLCGroup/MLCLeavesA/MLCLeaf4 [mm],0.23,1,Pass
+""")
+        path_mock = mock.MagicMock()
+        path_mock.open.return_value = rows
+        meta = {
+            'path': path_mock,
+            'energy': '6',
+            'beam_type': 'X',
+        }
+
+        record = ("5678", mpc.BEAM_AND_GEOMETRY_CHECKS, "2020-06-25-07-11", [meta])
+
+        res = self.pump.test_values_from_record(record)
+        expected = {
+            'collimationgroup_mlcgroup_mlcmaxoffseta_mm_6x': {'value': 0.4},
+            'collimationgroup_mlcgroup_mlcmaxoffsetb_mm_6x': {'value': 0.43},
+            'collimationgroup_mlcgroup_mlcmeanoffseta_mm_6x': {'value': 0.3},
+            'collimationgroup_mlcgroup_mlcmeanoffsetb_mm_6x': {'value': 0.27},
         }
         assert res == expected
 

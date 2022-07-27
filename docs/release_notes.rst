@@ -3,6 +3,11 @@
 Release Notes
 =============
 
+v0.3.14
+-------
+
+* Fix issue with making test level comments optional on MPC pumps
+
 v0.3.13
 -------
 
