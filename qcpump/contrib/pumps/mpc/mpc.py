@@ -354,7 +354,7 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
 
             beam_type = f"{meta['energy']}{meta['beam_type']}"
 
-            for row in self.csv_values(meta['path'].open('r')):
+            for row in self.csv_values(meta['path'].open('r', encoding="utf-8")):
                 if not self.include_test(row[0]):
                     continue
                 slug = self.slugify(row[0], beam_type)
