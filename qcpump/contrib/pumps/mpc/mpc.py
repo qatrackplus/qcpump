@@ -41,6 +41,7 @@ DATE_GROUP_FMT = "%Y-%m-%d-%H-%M"
 
 ENH_COUCH_CHECKS = "Enhanced Couch Checks"
 ENH_MLC_CHECKS = "Enhanced MLC Checks"
+COLL_DEVICES_CHECKS = "Collimation Devices Checks"
 BEAM_AND_GEOMETRY_CHECKS = "Beam and Geometry Checks"
 
 
@@ -107,6 +108,8 @@ def template_group(path):
         return ENH_COUCH_CHECKS
     elif "Enhanced" in p and "MLC" in p:
         return ENH_MLC_CHECKS
+    elif "Collimation" in p and "Devices" in p:
+        return COLL_DEVICES_CHECKS
     return BEAM_AND_GEOMETRY_CHECKS
 
 
@@ -221,6 +224,14 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
         "CollimationGroup/MLCGroup/MLCLeavesB/MLCLeaf",
         "CollimationGroup/MLCBacklashGroup/MLCBacklashLeavesA/MLCBacklashLeaf",
         "CollimationGroup/MLCBacklashGroup/MLCBacklashLeavesB/MLCBacklashLeaf",
+        "CollimationDevicesGroup/MLCGroup/MLCPosition0/MLCLeavesA/MLCLeaf",
+        "CollimationDevicesGroup/MLCGroup/MLCPosition0/MLCLeavesB/MLCLeaf",
+        "CollimationDevicesGroup/MLCGroup/MLCPosition1/MLCLeavesA/MLCLeaf",
+        "CollimationDevicesGroup/MLCGroup/MLCPosition1/MLCLeavesB/MLCLeaf",
+        "CollimationDevicesGroup/MLCGroup/MLCPosition2/MLCLeavesA/MLCLeaf",
+        "CollimationDevicesGroup/MLCGroup/MLCPosition2/MLCLeavesB/MLCLeaf",
+        "CollimationDevicesGroup/MLCBacklashGroup/MLCBacklashLeavesA/MLCBacklashLeaf",
+        "CollimationDevicesGroup/MLCBacklashGroup/MLCBacklashLeavesB/MLCBacklashLeaf"
     ]
 
     @property
