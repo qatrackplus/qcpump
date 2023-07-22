@@ -3,6 +3,13 @@
 Release Notes
 =============
 
+v0.3.16
+-------
+
+* Added a Charset option for connecting to DQA3 firebird databases. If 
+  you are having issues fetching units from the DQA3 database try using
+  WIN1251.
+
 v0.3.15
 -------
 

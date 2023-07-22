@@ -166,6 +166,7 @@ class BaseDQA3:
             'database': config['database'],
             'user': config['user'],
             'password': config['password'],
+            'charset': config['charset'],
         }
 
         connect_kwargs = {}
@@ -382,6 +383,15 @@ class FirebirdDQA3(BaseDQA3, QATrackFetchAndPost, BasePump):
                     'required': False,
                     'default': 1,
                     'help': "Enter the number of prior days you want to look for data to import",
+                },
+                {
+                    'name': 'charset',
+                    'label': 'Which character encoding to use',
+                    'type': MULTCHOICE,
+                    'required': True,
+                    'help': "Select the character encoding to use. If you have issues with fetching units. Try WIN1251",
+                    'default': 'UTF-8',
+                    'choices': ['UTF-8', 'WIN1251'],
                 },
             ],
         },
