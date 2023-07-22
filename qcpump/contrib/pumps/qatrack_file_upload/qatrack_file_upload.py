@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from pathlib import Path
 
@@ -59,6 +59,16 @@ class BaseQATrackGenericUploader:
                 'help': (
                     "Enter a file globbing pattern (e.g. 'some-name-*.txt') to ignore "
                     "certain files. Leave blank to not exclude any files."
+                ),
+            },
+            {
+                'name': 'use file modified time',
+                'type': BOOLEAN,
+                'required': False,
+                'default': False,
+                'help': (
+                    "Check to use the file modified time for the work_started/work_completed date."
+                    "Leave unchecked to use the current date / time (default for backwards compatibility)."
                 ),
             },
         ],
@@ -168,6 +178,16 @@ class BaseQATrackGenericUploader:
         """Use the same test list name for all files"""
         return self.get_config_value("Test List", "name")
 
+    def work_datetimes_for_record(self, record):
+        use_modified_time = self.get_config_value('File Types', 'use file modified time')
+        unit, path, move_to = record
+        if use_modified_time:
+            work_started = path.stat().st_mtime
+            work_started = datetime.datetime.fromtimestamp(work_started)
+        else:
+            work_started = datetime.datetime.now()
+        return work_started, work_started + datetime.timedelta(seconds=1)
+
     def qatrack_unit_for_record(self, record):
         """Accept a record to process and return a QATrack+ Unit name. Must be overridden in subclasses"""
         unit, path, move_to = record
@@ -175,7 +195,7 @@ class BaseQATrackGenericUploader:
 
     def id_for_record(self, record):
         unit, path, move_to = record
-        modified = datetime.fromtimestamp(path.stat().st_mtime).isoformat()
+        modified = datetime.datetime.fromtimestamp(path.stat().st_mtime).isoformat()
         return f"QCPump/GenericTextFileUploader/{unit}/{modified}/{path.stem}"
 
     def slug_and_filename_for_record(self, record):
