@@ -8,11 +8,15 @@ v0.3.15
 
 * Support for TrueBeam v3.0 MPC has been added. Thanks to `Ash Cullen
   <https://github.com/ash-cullen/>`_ for this contribution.
+  https://github.com/qatrackplus/qcpump/issues/11
 
 * For file upload pumps, there is a new "Use File Modified Time" option.
   Setting this to True will set the ``work_started`` date to the files last
   modified time.  For backwards compatability, the default is False and will
-  use the current date/time.
+  use the current date/time. https://github.com/qatrackplus/qcpump/issues/10
+
+* The default for ``include comment`` for QATrack+ pumps has been reverted to
+  True. https://github.com/qatrackplus/qcpump/issues/8
 
 v0.3.14
 -------

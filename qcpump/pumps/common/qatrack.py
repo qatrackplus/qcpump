@@ -94,7 +94,7 @@ class QATrackAPIMixin:
                 'type': BOOLEAN,
                 'required': False,
                 'help': "Enable if you want to upload a comment indicating the data came from QCPump (currently prevents auto review from occuring).",
-                'default': False,
+                'default': True,
             },
             {
                 'name': 'throttle',
