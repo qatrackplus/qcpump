@@ -18,6 +18,8 @@ v0.3.15
 * The default for ``include comment`` for QATrack+ pumps has been reverted to
   True. https://github.com/qatrackplus/qcpump/issues/8
 
+* Blank values in MPC files should no longer cause upload errors. https://github.com/qatrackplus/qcpump/issues/6
+
 v0.3.14
 -------
 

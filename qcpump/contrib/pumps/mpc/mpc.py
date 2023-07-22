@@ -398,7 +398,10 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
         return slugify(test_name + "_" + beam_type)
 
     def test_value(self, test_val):
-        return float(test_val.strip())
+        try:
+            return float(test_val.strip())
+        except (ValueError, TypeError):
+            return None
 
     def work_datetimes_for_record(self, record):
         sn, template_type, date, metas = record
