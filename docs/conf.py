@@ -20,6 +20,7 @@
 project = 'QCPump'
 copyright = '2021, Randle Taylor'
 author = 'Randle Taylor'
+master_doc = 'index'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1'

@@ -73,7 +73,7 @@ Configure Test Lists
     create a TestList directly in your database.  To run the script activate
     your virtualenv, changed to the QATrack+ root directory and then run
 
-    .. code-block::
+    .. code-block:: bash
 
         # create a test list in the db for photons
         python manage.py runscript create_grouped_dqa3_testlist --script-args db "Daily QA3 Results: Photons" 6X 6FFF 10X 10FFF "6X EDW60"

@@ -3,6 +3,12 @@
 Release Notes
 =============
 
+v0.3.15
+-------
+
+* Support for TrueBeam v3.0 MPC has been added. Thanks to `Ash Cullen
+  <https://github.com/ash-cullen/>`_ for this contribution.
+
 v0.3.14
 -------
 
@@ -24,7 +30,7 @@ v0.3.12
 * For FFF beams, added Beam Shape Constancy results from the DQA3\_TREND table for DQA3 v1.06
   SQL Server DBs. There are 9 new results sent to the server:
 
-    .. code-block::
+    .. code-block:: bash
 
         bsc{1,2,3}_{beam}
         bsc{1,2,3}_baseline_{beam}

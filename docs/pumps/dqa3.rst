@@ -72,7 +72,7 @@ Configure Test Lists
     create a TestList directly in your database.  To run the script activate
     your virtualenv, changed to the QATrack+ root directory and then run
 
-    .. code-block::
+    .. code-block:: bash
 
         # create a 6X test list in the db (replace 6X with your beam type)
         python manage.py runscript create_dqa3_testlist --script-args db 6X
