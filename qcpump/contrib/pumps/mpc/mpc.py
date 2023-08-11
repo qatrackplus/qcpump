@@ -373,7 +373,12 @@ class QATrackMPCPump(QATrackFetchAndPost, BasePump):
                     'value': self.test_value(row[1]),
                 }
                 if include_comment:
-                    test_vals[slug]['comment'] = "Threshold: %.3f,Result: %s" % (self.test_value(row[2]), row[3].strip())
+                    tname, tvalue, tol, result = row
+                    if tol:
+                        tol = self.test_value(tol)
+                        test_vals[slug]['comment'] = "Threshold: %.3f,Result: %s" % (tol, result)
+                    else:
+                        test_vals[slug]['comment'] = "Threshold: N/A,Result: %s" % (result)
 
         return test_vals
 

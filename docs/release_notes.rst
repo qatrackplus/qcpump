@@ -3,6 +3,15 @@
 Release Notes
 =============
 
+v0.3.17
+-------
+
+* The Firebird DQA3 charset optionv broke most DQA3 pumps. This has
+  now been fixed.
+
+* Halcyon MPC results can have blank Threshold values which were not
+  being handled correctly.  Blank Threshold values are now accepted.
+
 v0.3.16
 -------
 

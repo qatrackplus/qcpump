@@ -122,6 +122,23 @@ dir_name_metas = [
         },
     ),
 
+    # Halcyon
+    (
+        "HAL-TRT-SN1234-2023-10-20-10-20-30-0000-GeometryCheckTemplate6xFFFMVkV",
+        {
+            'path': "HAL-TRT-SN1234-2023-10-20-10-20-30-0000-GeometryCheckTemplate6xFFFMVkV",
+            'serial_no': '1234',
+            'date': dt(2023, 10, 20, 10, 20, 30),
+            'beam_num': "0000",
+            "energy": '6',
+            'beam_type': 'FFF',
+            'fff': 'FFF',
+            'mvkv': 'MVkV',
+            'hdtse': '',
+            'template': 'GeometryCheckTemplateMVkV',
+            'enhanced': ''
+        },
+    ),
 
     # "Old" style
     (
